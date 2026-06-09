@@ -1,10 +1,10 @@
 import { Routes, Route } from 'react-router-dom'
-import Home from './pages/Home'
+import PublicPage from './PublicPage'
 
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
+      <Route path="/" element={<PublicPage />} />
     </Routes>
   )
 }

@@ -1,0 +1,47 @@
+/* map.css — Leaflet tile skins + custom pins for RouteMap.jsx */
+
+.mapbox { overflow: hidden; background: #ded7c6; }
+.mapbox .leaflet-container { background: transparent; font-family: 'Archivo', sans-serif; }
+
+/* Tile recolor per skin (CARTO tiles tinted to match each poster) */
+.skin-bureau .leaflet-tile { filter: sepia(.32) saturate(.78) brightness(1.02) contrast(.95) hue-rotate(-6deg); }
+.skin-paper  .leaflet-tile { filter: sepia(.45) saturate(.62) brightness(1.07) contrast(.9) hue-rotate(-8deg); }
+.skin-ink                  { background: #10131c; }
+.skin-ink    .leaflet-tile { filter: grayscale(1) brightness(.72) contrast(1.18); }
+
+/* Warm / cool color wash over the tiles */
+.skin-bureau::after { content: ''; position: absolute; inset: 0; background: #be9743; opacity: .08; mix-blend-mode: multiply; pointer-events: none; z-index: 400; }
+.skin-paper::after  { content: ''; position: absolute; inset: 0; background: #c5302b; opacity: .07; mix-blend-mode: multiply; pointer-events: none; z-index: 400; }
+.skin-ink::after    { content: ''; position: absolute; inset: 0; background: #1b2a4a; opacity: .25; mix-blend-mode: screen;   pointer-events: none; z-index: 400; }
+
+/* Route stop pin (hinomaru) */
+.sun-pin {
+  width: 14px; height: 14px; border-radius: 50%; background: var(--c);
+  box-shadow: 0 0 0 2.5px #f4ecd8, 0 1px 3px rgba(0,0,0,.45);
+}
+
+/* "Last seen" live pin (pulsing) */
+.live-pin {
+  position: relative; width: 14px; height: 14px; border-radius: 50%; background: var(--c);
+  box-shadow: 0 0 0 3px #fff, 0 1px 4px rgba(0,0,0,.55);
+}
+.live-pin span {
+  position: absolute; inset: -1px; border-radius: 50%; background: var(--c);
+  animation: livepulse 2.1s ease-out infinite;
+}
+@keyframes livepulse {
+  0%   { transform: scale(1);   opacity: .55; }
+  100% { transform: scale(3.4); opacity: 0; }
+}
+
+/* Map corner caption */
+.map-tag {
+  position: absolute; left: 8px; bottom: 8px; z-index: 500;
+  background: rgba(20,16,12,.82); color: #fff; font-size: 10px; letter-spacing: 1px;
+  font-weight: 700; padding: 5px 9px; text-transform: uppercase; white-space: nowrap;
+  display: flex; align-items: center; gap: 7px; font-family: 'Archivo', sans-serif;
+}
+.map-tag::before {
+  content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--c);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 38%, transparent);
+}
