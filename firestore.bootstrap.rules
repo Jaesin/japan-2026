@@ -1,0 +1,72 @@
+rules_version = '2';
+
+// BOOTSTRAP ruleset — deployed only for the one-time seed of a FRESH project
+// (scripts/seed.mjs), then replaced by firestore.rules. Identical to the final
+// rules except invites: creation is open so the seed can plant the founder
+// invite before any member exists. Do not leave this ruleset deployed.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /trips/{tripId} {
+
+      function isMember() {
+        return request.auth != null
+          && exists(/databases/$(database)/documents/trips/$(tripId)/members/$(request.auth.uid));
+      }
+
+      match /config/secret {
+        allow read, write: if false;
+      }
+
+      match /config/features {
+        allow read: if true;
+        allow write: if isMember() && !('settings' in request.resource.data);
+      }
+
+      match /config/{docId} {
+        allow read: if docId != 'secret';
+        allow write: if isMember() && !(docId in ['secret', 'features']);
+      }
+
+      match /invites/{token} {
+        allow read, delete: if isMember();
+        allow create: if token.size() >= 20; // BOOTSTRAP ONLY — open founder-invite creation
+      }
+
+      match /members/{uid} {
+        allow create, update: if request.auth != null
+          && request.auth.uid == uid
+          && request.resource.data.name is string
+          && request.resource.data.name.size() >= 1
+          && request.resource.data.name.size() <= 40
+          && request.resource.data.inviteToken is string
+          && exists(/databases/$(database)/documents/trips/$(tripId)/invites/$(request.resource.data.inviteToken));
+        allow read, delete: if isMember();
+      }
+
+      match /tasks/{taskId} {
+        allow read: if isMember();
+        allow create, update: if isMember()
+          && request.resource.data.title is string
+          && request.resource.data.title.size() > 0
+          && request.resource.data.status in ['open', 'doing', 'done']
+          && request.resource.data.priority in ['high', 'normal', 'low'];
+        allow delete: if isMember();
+      }
+
+      match /checkins/{id} {
+        allow read: if true;
+        allow write: if isMember();
+      }
+      match /postcards/{id} {
+        allow read: if true;
+        allow write: if isMember();
+      }
+
+      match /{collectionId}/{docId} {
+        allow read, write: if isMember()
+          && !(collectionId in ['config', 'members', 'invites']);
+      }
+    }
+  }
+}

@@ -36,6 +36,10 @@ No test suite exists yet.
 
 The current public page was ported from a Claude Design handoff at `~/Downloads/design_handoff_public_pages/`. The files under `src/components/`, `src/PublicPage.jsx`, `src/theme.js`, and `src/tripData.js` came from that handoff and should stay close to it — adapt wiring (data, routing) rather than restyling. Pixel-level changes are fine; structural rewrites should be rare.
 
+## Firebase (set up 2026-06-10)
+
+Project `japan-2026-6363d`: Firestore in `asia-southeast1`, Anonymous Auth enabled. `src/firebaseConfig.js` holds the (non-secret) web config + `TRIP_ID`; `src/firebase.js` initializes the SDK with persistent offline cache and exports `ensureSignedIn()`. Security model is capability-link → member registration, enforced in `firestore.rules` (see `specs/01-access-and-security.md` — it supersedes PROJECT_SPEC §7). Deploy rules with `firebase deploy --only firestore:rules`. Scripts: `scripts/seed.mjs` (idempotent seed; needs `firestore.bootstrap.rules` deployed via `firebase deploy --config firebase.bootstrap.json --only firestore:rules` only for first-ever secret creation), `scripts/verify.mjs` (end-to-end rules check), `scripts/prune-members.mjs` (revoke all device registrations). The family access token lives at `~/.config/japan-2026/access-token` — never commit or print it.
+
 ## Not yet built
 
-Firebase (Anonymous Auth + Firestore), the `?key=`-gated portal, and any Hermes write integrations. `PROJECT_SPEC.md` §6–§11 sketch the plan; nothing in `src/` implements it yet.
+The portal UI (join flow, `useMember` hook, all portal pages) and Hermes write integrations. `specs/` holds the triage-ready feature specs (`specs/README.md` is the index); nothing in `src/` implements them beyond the Firebase foundation above.

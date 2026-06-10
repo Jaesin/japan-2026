@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Never commit credentials — the repo is public (specs/40)
+**/service-account*.json
+.firebase/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -22,3 +26,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Development process artifacts
+artifacts

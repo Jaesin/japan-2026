@@ -43,16 +43,16 @@ A **single-page application** (SPA) for the Mulenex family's 7–10 day trip to 
 | **Styling** | CSS (no framework) | Bespoke vintage poster aesthetic — Tailwind/framework would fight the retro look |
 | **Fonts** | Google Fonts (Anton + Archivo) | Anton for headlines, Archivo for body — sourced from Claude Design |
 | **Icons** | Hand-drawn emoji / inline SVGs | Fits the retro aesthetic |
-| **Deploy** | GitHub Actions → `peaceiris/actions-gh-pages` | Push to `main` auto-deploys |
+| **Deploy** | GitHub Actions → official Pages actions (`configure-pages` / `upload-pages-artifact` / `deploy-pages`) | Push to `main` auto-deploys to `https://japan-2026.mulenex.org/` |
 
 ### Environment
 | Detail | Value |
 |---|---|
 | **Node.js** | v22.22.3 (via nvm, set as default). `.nvmrc` contains `22` |
 | **Package manager** | npm |
-| **Vite base path** | Currently `/` — needs to be `/japan-2026/` for proper GH Pages subpath routing |
+| **Vite base path** | `/` — correct and final. The site is served at the root of the custom domain `japan-2026.mulenex.org`, not under a `/japan-2026/` subpath |
 
-> **⚠️ Note on `base` path**: `vite.config.js` currently has `base: '/'`. It was changed from `/japan-2026/` to fix a GH Pages deploy error. This needs to be confirmed as working or adjusted — the GH Pages deploy URL is `https://jaesin.github.io/japan-2026/`, which implies `base: '/japan-2026/'` is correct. The last GH Actions run error suggests there may be an asset path issue.
+> **✅ Resolved (2026-06-09)**: `base: '/'` is correct. The repo's GitHub Pages is configured with the custom domain `japan-2026.mulenex.org` (HTTPS cert approved, expires 2026-09-07), so assets resolve from the domain root. Do **not** change `base` to `/japan-2026/` — that was only relevant for the default `jaesin.github.io/japan-2026/` URL, which is no longer how the site is served. See commit `7098944`.
 
 ---
 
@@ -88,7 +88,7 @@ japan-2026/
 
 ### Current Build Status
 - `npm run build` succeeds (40 modules, ~180KB JS bundle + 19KB sun.svg)
-- Last GH Actions run failed — needs investigation (see Open Questions)
+- GH Actions deploys are green — last 3 runs succeeded; live at `https://japan-2026.mulenex.org/` (the one failed run was the initial commit, fixed by `74f99ad` + `7098944`)
 - `dist/` outputs to `index.html` + `assets/` + `sun.svg`
 
 ---
@@ -115,11 +115,14 @@ Replaced the original hand-rolled `pages/Home.jsx` with the Claude Design handof
 - Uses `actions/configure-pages`, `upload-pages-artifact`, `deploy-pages` (official GH Pages action pattern)
 - Node 20 in CI (via `actions/setup-node` with `node-version: 20`)
 
-### 4.4 Firebase ❌ Not started
-- No Firebase project created
-- No Firebase SDK installed in `package.json`
-- No Firestore security rules written
-- No anonymous auth configured
+### 4.4 Firebase ✅ Foundation set up (2026-06-10)
+- Project: `japan-2026` (ID `japan-2026-6363d`), web app `japan-2026-web` registered
+- Firestore database created in `asia-southeast1`; Anonymous Auth provider enabled
+- `firebase` SDK installed; `src/firebaseConfig.js` (config + `TRIP_ID`) and `src/firebase.js` (init, offline persistent cache, `ensureSignedIn()`)
+- Security rules per `specs/01-access-and-security.md` deployed (`firestore.rules`); bootstrap variant (`firestore.bootstrap.rules` + `firebase.bootstrap.json`) used once for seeding
+- Seeded: `config/secret` (access token — local copy at `~/.config/japan-2026/access-token`, never committed/printed), `config/main` (dates/route/fxRate), `config/features` (global feature flags per `specs/03-feature-flags.md` — tasks on, rest dark, `settings` key rejected by rules), 5 starter tasks
+- `scripts/seed.mjs` (idempotent), `scripts/verify.mjs` (7-point end-to-end rules check — all passing), `scripts/prune-members.mjs` (device revocation utility)
+- Not yet built: portal UI, join flow component, the `useMember` hook (specs 01/02)
 
 ---
 
@@ -151,9 +154,15 @@ The aesthetic is **vintage retro travel poster** — inspired by 1930s–1950s J
 
 ---
 
-## 6. Portal Feature Concepts (Still Open — Not Designed or Implemented)
+## 6. Portal Feature Concepts (Specced — Awaiting Triage)
 
-> **No decisions have been made about what to build for the admin portal.** These are brainstormed concepts from the initial planning session. Prioritization and scope are TBD.
+> **Update 2026-06-09**: Every concept below (plus several additions — Today dashboard, food
+> voting, phrasebook, activity feed, Hermes write toolkit) now has a full spec in
+> [`specs/`](specs/README.md) with data models, UI scope, security rules, and effort
+> estimates. `specs/README.md` is the triage sheet and dependency graph. The auth design in
+> §7 below is **superseded** by `specs/01-access-and-security.md` (token enforced in
+> Firestore rules via member registration, not just `request.auth != null`). Prioritization
+> still TBD. Original brainstorm kept below for history.
 
 ### Concept Areas
 
@@ -273,10 +282,10 @@ Visitor → opens URL
 
 ### 🔴 High Priority — Need Answers Before Building Portal
 
-1. **Firebase project**: Has one been created? If not, need `firebase-tools` init, billing setup (Spark plan — free), or is this using a different project setup?
-2. **`base` path**: `vite.config.js` has `base: '/'` but GH Pages deploys to `https://jaesin.github.io/japan-2026/`. The last GH Actions run failed — need to verify the correct base path and fix the deploy.
+1. ~~**Firebase project**~~ — ✅ Resolved 2026-06-10. `japan-2026-6363d` on Spark plan; Firestore (asia-southeast1) + Anonymous Auth live, rules deployed and verified. See §4.4.
+2. ~~**`base` path**~~ — ✅ Resolved 2026-06-09. `base: '/'` is correct for the custom domain `japan-2026.mulenex.org`; deploys are green. See §2 note.
 3. **Sun icon final selection**: The current `public/sun.svg` is a raw 19KB Claude Design path-data export. Do we want to use variant-1 (Poster Classic, 22 alternating rays) as a cleaned-up replacement, or keep the Claude Design version?
-4. **Repo remote**: Is there a `git remote origin` pointing to `github.com/Jaesin/japan-2026`? Checked out to `main` branch? (Yes — confirmed working tree clean, up to date with origin/main.)
+4. ~~**Repo remote**~~ — ✅ Resolved. `origin` → `git@github.com:Jaesin/japan-2026.git`, on `main`, clean and up to date.
 
 ### 🟡 Medium Priority — Portal Scope Decisions
 
@@ -294,8 +303,10 @@ Visitor → opens URL
 
 ### ⚠️ Known Issues
 
-13. **GH Actions deploy error**: Last run at `github.com/Jaesin/japan-2026/actions/runs/27211735582` failed. Needs investigation. Likely `base` path mismatch or asset reference issue.
-14. **`vite.config.js` base changed from `/japan-2026/` to `/`** — this was changed between the scaffold and current state. Need to confirm the correct value for GH Pages deployment.
+13. ~~**GH Actions deploy error**~~ — ✅ Resolved 2026-06-09. Run `27211735582` was the initial commit; fixed by `74f99ad` ("fix build") and `7098944` (base → `/`). All subsequent runs succeeded.
+14. ~~**`vite.config.js` base value**~~ — ✅ Resolved 2026-06-09. `/` is correct and final (custom domain at root). See §2.
+15. **HTTPS not enforced** (minor): Pages reports `https_enforced: false` even though the cert for `japan-2026.mulenex.org` is approved. Flip "Enforce HTTPS" in repo Settings → Pages (one checkbox) so `http://` requests redirect.
+16. **CI Node version drift** (minor): deploy workflow uses Node 20 while `.nvmrc` pins 22. Harmless today; bump `deploy.yml` to `node-version: 22` whenever it's next touched.
 
 ---
 
@@ -333,14 +344,14 @@ Hermes agents will be the **primary data management layer** for the portal:
 - [x] Add favicon/icon
 - [x] Push to GitHub with deploy
 
-### Phase 2 — Firebase — Not Started
-- [ ] Create Firebase project (or confirm existing)
-- [ ] Enable Anonymous Auth
-- [ ] Create Firestore database
-- [ ] Install Firebase SDK in project
-- [ ] Write Firestore security rules
-- [ ] Add Firebase config to SPA
-- [ ] Build auth/key gate component
+### Phase 2 — Firebase — ✅ Done except UI (2026-06-10)
+- [x] Create Firebase project (or confirm existing)
+- [x] Enable Anonymous Auth
+- [x] Create Firestore database
+- [x] Install Firebase SDK in project
+- [x] Write Firestore security rules
+- [x] Add Firebase config to SPA
+- [ ] Build auth/key gate component (join flow — specs 01/02)
 
 ### Phase 3 — Portal Features — Not Started
 - [ ] Portal frame with sidebar navigation
@@ -369,8 +380,8 @@ Hermes agents will be the **primary data management layer** for the portal:
 📍 Working directory: /Users/jaesin/workspace/projects/japan-2026
 🌿 Git branch: main (up to date with origin/main, clean working tree)
 🟢 Build: npm run build succeeds
-🔴 GH Pages: Last deploy failed
-🔥 Firebase: Not set up
+🟢 GH Pages: deploys green, live at https://japan-2026.mulenex.org/ (custom domain, cert approved)
+🔥 Firebase: live — Firestore (asia-southeast1) + anon auth, rules deployed & verified
 👤 Family: Jaesin (Hermes + UI) + Wife (UI-only via share link)
 ⚡ Node: v22.22.3 (nvm default, .nvmrc)
 ```

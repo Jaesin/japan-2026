@@ -1,0 +1,125 @@
+/* ============================================================================
+   tokens.css — Japan 2026 Portal design tokens (extends the poster theme.js)
+   Direction A "Rising Sun" (light) = default / prefers-color-scheme: light
+   Direction B "Sunset Express" (dark) = prefers-color-scheme: dark
+   Ported from artifacts/portal_handoff/styles/tokens.css; per the handoff
+   README the prototype's [data-dir="A"/"B"] reviewer switch maps to
+   prefers-color-scheme in production — the selector is the only change.
+   Day palette is shared (oklch, retro-muted).
+   ============================================================================ */
+
+/* ---- Shared (direction-independent) ---------------------------------------- */
+:root {
+  /* 10-step day palette — oklch, muted retro family, reads on paper & night.
+     Hues spaced around the wheel, accent-red region kept clear. */
+  --day-1:  oklch(0.70 0.13 50);   /* Tokyo   — terracotta  */
+  --day-2:  oklch(0.74 0.12 85);   /* amber                 */
+  --day-3:  oklch(0.69 0.11 120);  /* olive                 */
+  --day-4:  oklch(0.65 0.11 155);  /* pine green            */
+  --day-5:  oklch(0.67 0.09 195);  /* teal                  */
+  --day-6:  oklch(0.65 0.10 230);  /* sea blue              */
+  --day-7:  oklch(0.62 0.11 262);  /* indigo blue           */
+  --day-8:  oklch(0.62 0.12 300);  /* violet                */
+  --day-9:  oklch(0.64 0.12 340);  /* rose                  */
+  --day-10: oklch(0.58 0.10 25);   /* brick                 */
+
+  /* spacing scale (4pt base) */
+  --s1: 4px;  --s2: 8px;  --s3: 12px; --s4: 16px;
+  --s5: 20px; --s6: 24px; --s7: 32px; --s8: 40px;
+
+  /* radii — posters are flat/hard-edged; portal uses tiny radii only */
+  --r-sm: 2px; --r-md: 3px; --r-pill: 999px;
+
+  --tap: 44px;            /* minimum touch target */
+  --gutter: 18px;         /* portal page gutter (tighter than poster's 30) */
+}
+
+/* ---- Direction A "Rising Sun" (light — the default) ------------------------ */
+:root {
+  --bg:          #F4ECD8;   /* paper            */
+  --surface:     #FBF6E9;   /* card             */
+  --surface-2:   #EFE5CC;   /* sunk / track     */
+  --text:        #211C15;   /* ink              */
+  --text-muted:  #8A7C62;   /* muted            */
+  --line:        rgba(33,28,21,0.14);
+  --line-strong: rgba(33,28,21,0.30);
+
+  --accent:      #C5302B;   /* hinomaru red     */
+  --accent-press:#A5241F;
+  --on-accent:   #F4ECD8;
+  --highlight:   #F0B23E;   /* gold (countdown) */
+
+  /* inputs */
+  --input-bg:     #FFFCF4;
+  --input-border: rgba(33,28,21,0.28);
+  --input-focus:  #C5302B;
+  --placeholder:  rgba(33,28,21,0.40);
+
+  /* interaction states */
+  --press-overlay: rgba(33,28,21,0.07);
+  --disabled-bg:   rgba(33,28,21,0.10);
+  --disabled-text: rgba(33,28,21,0.34);
+
+  /* semantics */
+  --success:    #4F7A45;  --success-bg: rgba(79,122,69,0.14);
+  --warning:    #B5781F;  --warning-bg: rgba(181,120,31,0.16);
+  --danger:     #BE2C20;  --danger-bg:  rgba(190,44,32,0.12);
+
+  /* selected chip = inked stamp */
+  --chip-sel-bg:   #211C15;
+  --chip-sel-text: #F4ECD8;
+  --chip-off-bg:   transparent;
+  --chip-off-text: #211C15;
+
+  --font-display: 'Anton', sans-serif;
+  --font-body:    'Archivo', sans-serif;
+  --font-jp:      'Zen Old Mincho', serif;
+
+  --shell-edge: #e7ddc4;    /* letterbox color */
+}
+
+/* ---- Direction B "Sunset Express" (dark) ----------------------------------- */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:          #1B2A4A;   /* night            */
+    --surface:     rgba(255,255,255,0.05);
+    --surface-2:   rgba(255,255,255,0.03);
+    --text:        #F6EEDD;   /* cream            */
+    --text-muted:  rgba(246,238,221,0.55);
+    --line:        rgba(246,238,221,0.16);
+    --line-strong: rgba(246,238,221,0.34);
+
+    --accent:      #EE3C2B;   /* sun red          */
+    --accent-press:#CF3322;
+    --on-accent:   #F6EEDD;
+    --highlight:   #D9622B;   /* orange (countdown) */
+
+    --input-bg:     rgba(255,255,255,0.06);
+    --input-border: rgba(246,238,221,0.24);
+    --input-focus:  #D9622B;
+    --placeholder:  rgba(246,238,221,0.38);
+
+    --press-overlay: rgba(246,238,221,0.10);
+    --disabled-bg:   rgba(246,238,221,0.08);
+    --disabled-text: rgba(246,238,221,0.30);
+
+    --success:    #6FB07E;  --success-bg: rgba(111,176,126,0.16);
+    --warning:    #E0A84C;  --warning-bg: rgba(224,168,76,0.16);
+    --danger:     #F0533C;  --danger-bg:  rgba(240,83,60,0.14);
+
+    --chip-sel-bg:   #F6EEDD;
+    --chip-sel-text: #1B2A4A;
+    --chip-off-bg:   transparent;
+    --chip-off-text: #F6EEDD;
+
+    --font-display: 'Bebas Neue', sans-serif;
+    --font-body:    'Space Grotesk', sans-serif;
+    --font-jp:      'Space Grotesk', sans-serif; /* dark has no serif; falls back */
+
+    --indigo: #243a63;
+    --pink:   #E3A79B;
+    --orange: #D9622B;
+
+    --shell-edge: #11192c;
+  }
+}

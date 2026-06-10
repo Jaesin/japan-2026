@@ -5,7 +5,9 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 
 export default [
-  { ignores: ['dist'] },
+  // `artifacts/` holds raw design-handoff prototypes (in-browser Babel, window
+  // globals) — reference material, not shipped code; lint only what ships.
+  { ignores: ['dist', 'artifacts'] },
   {
     files: ['**/*.{js,jsx}'],
     languageOptions: {
@@ -29,6 +31,11 @@ export default [
       ...react.configs['jsx-runtime'].rules,
       ...reactHooks.configs.recommended.rules,
       'react/jsx-no-target-blank': 'off',
+      // The codebase doesn't use PropTypes (plain-JS, destructured props —
+      // poster + portal design-handoff style); the rule is all noise here.
+      'react/prop-types': 'off',
+      // Poster/portal copy is prose-heavy; literal apostrophes render fine.
+      'react/no-unescaped-entities': 'off',
       'react-refresh/only-export-components': [
         'warn',
         { allowConstantExport: true },

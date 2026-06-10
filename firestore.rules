@@ -1,0 +1,90 @@
+rules_version = '2';
+
+// Security model: per-device invite links -> member registration.
+// See specs/04-user-management.md (supersedes spec 01's single shared token). Summary:
+//  - invites/{token}: doc ID is the capability token. Members create/revoke them
+//    from Settings -> Users. Never publicly readable.
+//  - A signed-in (anonymous) uid registers members/{uid} by presenting a valid
+//    inviteToken plus a required display name.
+//  - Membership (doc existence) is the credential for everything else.
+//  - Only checkins + postcards are public-read (the poster renders them).
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /trips/{tripId} {
+
+      function isMember() {
+        return request.auth != null
+          && exists(/databases/$(database)/documents/trips/$(tripId)/members/$(request.auth.uid));
+      }
+
+      // DEPRECATED (spec 04): pre-invites shared token. Doc may linger; nobody can touch it.
+      match /config/secret {
+        allow read, write: if false;
+      }
+
+      // Feature flags (specs/03-feature-flags.md). Public read: the poster checks the
+      // checkins/postcards flags. Keys are added only as features ship. `settings` may
+      // never appear as a flag — the Settings page must not be able to disable itself.
+      match /config/features {
+        allow read: if true;
+        allow write: if isMember() && !('settings' in request.resource.data);
+      }
+
+      // Trip config (dates, route, fxRate). Public read: the poster hydrates from it.
+      // secret + features are excluded — their stricter rules must not be unioned away.
+      match /config/{docId} {
+        allow read: if docId != 'secret';
+        allow write: if isMember() && !(docId in ['secret', 'features']);
+      }
+
+      // Device invite links (spec 04). The {token} ID is the secret — never public-read.
+      // Immutable: create + delete (revoke) only.
+      match /invites/{token} {
+        allow read, delete: if isMember();
+        allow create: if isMember() && token.size() >= 20;
+      }
+
+      // Join: a uid registers itself by presenting a live invite token and a name.
+      // Delete enables revocation from Settings -> Users.
+      match /members/{uid} {
+        allow create, update: if request.auth != null
+          && request.auth.uid == uid
+          && request.resource.data.name is string
+          && request.resource.data.name.size() >= 1
+          && request.resource.data.name.size() <= 40
+          && request.resource.data.inviteToken is string
+          && exists(/databases/$(database)/documents/trips/$(tripId)/invites/$(request.resource.data.inviteToken));
+        allow read, delete: if isMember();
+      }
+
+      // Task board (specs/10-task-board.md) — members-only, light shape validation.
+      match /tasks/{taskId} {
+        allow read: if isMember();
+        allow create, update: if isMember()
+          && request.resource.data.title is string
+          && request.resource.data.title.size() > 0
+          && request.resource.data.status in ['open', 'doing', 'done']
+          && request.resource.data.priority in ['high', 'normal', 'low'];
+        allow delete: if isMember();
+      }
+
+      // During-trip public feeds (the poster reads these without auth).
+      match /checkins/{id} {
+        allow read: if true;
+        allow write: if isMember();
+      }
+      match /postcards/{id} {
+        allow read: if true;
+        allow write: if isMember();
+      }
+
+      // Every other portal collection (research, itinerary, budget, ...): members-only.
+      // config/members/invites are excluded — their stricter rules must not be unioned away.
+      match /{collectionId}/{docId} {
+        allow read, write: if isMember()
+          && !(collectionId in ['config', 'members', 'invites']);
+      }
+    }
+  }
+}
