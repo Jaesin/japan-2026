@@ -18,6 +18,7 @@ export const FEATURE_GROUPS = [
 
 export const FEATURES = [
   { id: 'tasks', label: 'Tasks', ico: 'tasks', path: '/portal/tasks', group: 'planning', blurb: "Who's doing what before we fly." },
+  { id: 'packing', label: 'Packing', ico: 'packing', path: '/portal/packing', group: 'planning', blurb: "Who's got what covered." },
 ];
 
 export const HOME_ITEM = { id: 'home', label: 'Home', ico: 'today', path: '/portal' };

@@ -16,6 +16,7 @@ import { ActionSheet } from './ui/overlays.jsx';
 import { SunBurst, TabIco } from './ui/primitives.jsx';
 import PortalHome from './pages/PortalHome.jsx';
 import TasksPage from './pages/TasksPage.jsx';
+import PackingPage from './pages/PackingPage.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
 import './styles/tokens.css';
 import './styles/components.css';
@@ -126,6 +127,10 @@ export default function PortalShell() {
             <Route
               path="tasks"
               element={isEnabled(features, 'tasks') ? <TasksPage /> : <FeatureClosedPage loading={featuresLoading} />}
+            />
+            <Route
+              path="packing"
+              element={isEnabled(features, 'packing') ? <PackingPage /> : <FeatureClosedPage loading={featuresLoading} />}
             />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="*" element={<FeatureClosedPage loading={featuresLoading} />} />
