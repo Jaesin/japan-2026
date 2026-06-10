@@ -1,0 +1,112 @@
+/* phrasebook.css — Phrasebook page (spec 19). Extends components.css
+   conventions: flat fills, 1px hairlines, block__elem class names, token
+   vars only (tokens.css). */
+
+.phrasebook {
+  padding: var(--gutter);
+  padding-bottom: calc(var(--gutter) + 80px); /* clear the FAB */
+}
+
+/* category accordion */
+.phrase-section { margin-bottom: 8px; }
+
+.phrase-section__head {
+  width: 100%; min-height: var(--tap);
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 4px;
+  background: none; border: none; border-bottom: 1px solid var(--line-strong);
+  color: var(--text); font-family: var(--font-body); text-align: left;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.phrase-section__head:active { background: var(--press-overlay); }
+.phrase-section__label { flex: 1; color: var(--text-muted); }
+.phrase-section__count {
+  font-size: 12px; color: var(--text-muted); font-variant-numeric: tabular-nums;
+}
+.phrase-section__chev {
+  width: 8px; height: 8px; flex-shrink: 0; margin-right: 4px;
+  border-right: 1.5px solid var(--text-muted); border-bottom: 1.5px solid var(--text-muted);
+  transform: rotate(-45deg); transition: transform 0.15s;
+}
+.phrase-section__head--open .phrase-section__chev { transform: rotate(45deg); }
+
+/* phrase row — whole row opens the show-card */
+.phrase-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 4px; min-height: var(--tap);
+  border-bottom: 1px solid var(--line);
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.phrase-row:active { background: var(--press-overlay); }
+
+.phrase-row__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.phrase-row__jp { font-size: 18px; line-height: 1.35; font-family: var(--font-jp); }
+.phrase-row__romaji { font-size: 12px; color: var(--text-muted); }
+.phrase-row__en { font-size: 14px; line-height: 1.35; }
+.phrase-row__jp + .phrase-row__romaji + .phrase-row__en,
+.phrase-row__jp + .phrase-row__en { color: var(--text-muted); font-size: 13px; }
+
+/* speaker icon button */
+.speak-btn {
+  flex-shrink: 0; width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent; border: none; border-radius: var(--r-md);
+  color: var(--text-muted); cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.speak-btn:active { background: var(--press-overlay); }
+.speak-btn--active { color: var(--accent); }
+
+/* per-row delete */
+.phrase-row__del {
+  flex-shrink: 0; width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent; border: none; border-radius: var(--r-md);
+  color: var(--text-muted); font-size: 14px; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.phrase-row__del:active { background: var(--press-overlay); color: var(--danger); }
+
+/* full-screen show-card overlay */
+.showcard {
+  position: fixed; inset: 0; background: var(--bg); z-index: 200;
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+}
+.showcard__inner {
+  max-width: 480px; width: 100%; text-align: center;
+  display: flex; flex-direction: column; gap: 16px;
+}
+.showcard__jp {
+  font-size: clamp(36px, 8vw, 56px); line-height: 1.2;
+  font-family: var(--font-jp);
+}
+.showcard__romaji { font-size: 18px; color: var(--text-muted); }
+.showcard__en { font-size: 14px; color: var(--text-muted); letter-spacing: 0.04em; }
+.showcard__actions {
+  display: flex; gap: 12px; justify-content: center; align-items: center; margin-top: 8px;
+}
+.showcard .speak-btn {
+  width: var(--tap); height: var(--tap);
+  border: 1px solid var(--line-strong); border-radius: 50%;
+}
+
+/* floating add button — sits above the tab bar */
+.phrase-fab {
+  position: fixed;
+  bottom: calc(72px + env(safe-area-inset-bottom));
+  right: 20px;
+  width: 52px; height: 52px; border-radius: 50%;
+  background: var(--accent); color: var(--on-accent);
+  font-size: 24px; line-height: 1; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  z-index: 50;
+  -webkit-tap-highlight-color: transparent;
+}
+.phrase-fab:active { background: var(--accent-press); }
+@media (min-width: 768px) {
+  .phrase-fab { bottom: 24px; } /* sidebar layout — no tab bar to clear */
+}
+
+/* add sheet form */
+.phrase-form { display: grid; gap: 14px; padding-bottom: 8px; }
