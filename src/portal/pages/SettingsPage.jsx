@@ -1,6 +1,7 @@
 // SettingsPage — specs 03/04: feature-flag switches (rendered from the keys
-// present in config/features), members list + revoke, device invite links.
-// Always reachable for members — never behind a flag.
+// present in config/features) and the Members section — people grouped by
+// name, each expanding to its registered devices (revoke / add device), plus
+// an "Invite someone" CTA. Always reachable for members — never behind a flag.
 
 import { Fragment, useState } from 'react';
 import { Button, EmptyState, Field, Input } from '../ui/ui.jsx';
@@ -38,7 +39,11 @@ function mintToken() {
 }
 
 // Join URL derived from the current location — works on localhost and prod.
-const joinUrl = (token) => `${location.origin}${location.pathname}#/join?key=${token}`;
+// Device invites carry the person's name as a display hint (spec 04: the
+// stored name still comes from the invite doc, not the URL).
+const joinUrl = (token, name) =>
+  `${location.origin}${location.pathname}#/join?key=${token}`
+  + (name ? `&name=${encodeURIComponent(name)}` : '');
 
 async function copyText(text) {
   try {
@@ -154,164 +159,195 @@ function FeaturesSection({ onToast }) {
   );
 }
 
-/* ---- Users section (spec 04) -------------------------------------------------- */
+/* ---- Users section (spec 04, revised) ------------------------------------------ */
 
-function MembersSection({ invites, onToast }) {
-  const { uid } = useMember();
-  const { docs: members, loading } = useCollection(['members']);
-  const [revoking, setRevoking] = useState(null); // member doc pending confirm
-
-  const inviteById = new Map(invites.map((i) => [i.id, i]));
-  const sorted = [...members].sort(
-    (a, b) => (a.joinedAt?.toMillis?.() ?? Infinity) - (b.joinedAt?.toMillis?.() ?? Infinity),
-  );
-
-  const revoke = async (m) => {
-    setRevoking(null);
-    try {
-      await removeItem(['members', m.id]);
-      onToast(`${m.name} revoked`);
-    } catch {
-      onToast("Couldn't revoke — check your connection");
-    }
-  };
-
-  return (
-    <section className="settings__section">
-      <SectionHead label="Members" />
-      <div className="settings__list">
-        {sorted.map((m) => {
-          const invite = inviteById.get(m.inviteToken);
-          const self = m.id === uid;
-          return (
-            <div className="row row--static" key={m.id}>
-              <span className="row__main">
-                <div className="row__title">{m.name}{self ? ' · this device' : ''}</div>
-                <div className="row__meta">
-                  Joined {fmtDate(m.joinedAt)} · via {invite ? invite.label : 'revoked link'}
-                </div>
-              </span>
-              <Button size="sm" variant="destructive" onClick={() => setRevoking(m)}>Revoke</Button>
-            </div>
-          );
-        })}
-        {!loading && members.length === 0 && (
-          <EmptyState line="No members yet — share a device link below to let the family in." />
-        )}
-      </div>
-      {revoking && (
-        <ConfirmDialog
-          title={`Revoke ${revoking.name}?`}
-          body={revoking.id === uid
-            ? `Careful — this is THIS device. ${revoking.name} (you) will lose portal access here immediately.`
-            : `${revoking.name} will lose access on that device immediately.`}
-          confirmLabel="Revoke"
-          onConfirm={() => revoke(revoking)}
-          onCancel={() => setRevoking(null)}
-        />
-      )}
-    </section>
-  );
-}
-
-function InvitesSection({ invites, loading, onToast }) {
-  const [revoking, setRevoking] = useState(null); // invite doc pending confirm
-  const [sheet, setSheet] = useState(null); // null | {phase:'form'} | {phase:'done', token, label}
+// Shared invite-minting sheet. kind 'device' → { label, memberName } and the
+// URL carries &name=; kind 'invite' → { label } only (recipient sets their
+// own name during join). The label is optional in both.
+function InviteSheet({ kind, memberName, onClose, onToast }) {
+  const device = kind === 'device';
   const [label, setLabel] = useState('');
-  const [labelErr, setLabelErr] = useState(null);
+  const [err, setErr] = useState(null);
   const [saving, setSaving] = useState(false);
-
-  const sorted = [...invites].sort(
-    (a, b) => (b.createdAt?.toMillis?.() ?? Infinity) - (a.createdAt?.toMillis?.() ?? Infinity),
-  );
-
-  const copyLink = async (token) => {
-    onToast((await copyText(joinUrl(token))) ? 'Link copied' : "Couldn't copy — copy it manually");
-  };
-
-  const revoke = async (inv) => {
-    setRevoking(null);
-    try {
-      await removeItem(['invites', inv.id]);
-      onToast(`Link "${inv.label}" revoked`);
-    } catch {
-      onToast("Couldn't revoke — check your connection");
-    }
-  };
+  const [done, setDone] = useState(null); // { token, label }
 
   const create = async () => {
-    const trimmed = label.trim();
-    if (!trimmed) { setLabelErr('A label is required — whose device is this for?'); return; }
+    if (saving) return;
     setSaving(true);
     try {
+      const trimmed = label.trim() || (device ? 'New device' : 'Invite link');
       const token = mintToken();
-      await setItem(['invites', token], { label: trimmed });
-      setSheet({ phase: 'done', token, label: trimmed });
-      setLabel('');
-      setLabelErr(null);
+      await setItem(['invites', token],
+        device ? { label: trimmed, memberName } : { label: trimmed });
+      setDone({ token, label: trimmed });
     } catch {
-      setLabelErr("Couldn't create the link — check your connection.");
+      setErr("Couldn't create the link — check your connection.");
     } finally {
       setSaving(false);
     }
   };
 
-  const closeSheet = () => { setSheet(null); setLabel(''); setLabelErr(null); };
+  if (done) {
+    const url = joinUrl(done.token, device ? memberName : null);
+    const copy = async () => {
+      onToast((await copyText(url)) ? 'Link copied' : "Couldn't copy — copy it manually");
+    };
+    return (
+      <BottomSheet title="Link ready" onClose={onClose}
+        submit={<Button variant="secondary" block onClick={onClose}>Done</Button>}>
+        <div className="linkdone">
+          {device
+            ? <>Open this on your other device — it joins as <b>{memberName}</b>, no questions asked.</>
+            : <>Send this to <b>{done.label}</b> — they pick their own name when they open it.</>}
+        </div>
+        <span className="linkbox">{url}</span>
+        <Button variant="primary" block onClick={copy}>Copy link</Button>
+      </BottomSheet>
+    );
+  }
+
+  return (
+    <BottomSheet title={device ? 'Add a device' : 'Invite someone'} onClose={onClose}
+      submit={<Button variant="primary" block disabled={saving} onClick={create}>
+        {saving ? 'Creating…' : 'Create link'}</Button>}>
+      <Field label="Label (optional)" error={err}
+        hint={device
+          ? 'Which device is this — e.g. "iPad" or "MacBook".'
+          : `Who's this for — e.g. "Mai's phone".`}>
+        <Input value={label} autoFocus placeholder={device ? 'New device' : "Mai's phone"}
+          onChange={(e) => { setLabel(e.target.value); setErr(null); }}
+          onKeyDown={(e) => { if (e.key === 'Enter') create(); }} />
+      </Field>
+    </BottomSheet>
+  );
+}
+
+function Chevron({ open }) {
+  return (
+    <span className={`person__chev${open ? ' person__chev--open' : ''}`} aria-hidden="true">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M9 6l6 6-6 6" />
+      </svg>
+    </span>
+  );
+}
+
+function MembersSection({ invites, onToast }) {
+  const { uid, member } = useMember();
+  const { docs: members, loading } = useCollection(['members']);
+  const [open, setOpen] = useState(() => new Set()); // expanded person names
+  const [revoking, setRevoking] = useState(null); // member (device) doc pending confirm
+  const [sheet, setSheet] = useState(null); // null | { kind: 'device' | 'invite' }
+
+  const inviteById = new Map(invites.map((i) => [i.id, i]));
+  const currentName = member?.name;
+
+  // Person identity = members grouped by name (spec 04); people and their
+  // devices both ordered by earliest join.
+  const people = [];
+  const byName = new Map();
+  const sorted = [...members].sort(
+    (a, b) => (a.joinedAt?.toMillis?.() ?? Infinity) - (b.joinedAt?.toMillis?.() ?? Infinity),
+  );
+  for (const m of sorted) {
+    let person = byName.get(m.name);
+    if (!person) {
+      person = { name: m.name, devices: [] };
+      byName.set(m.name, person);
+      people.push(person);
+    }
+    person.devices.push(m);
+  }
+
+  const toggle = (name) => setOpen((prev) => {
+    const next = new Set(prev);
+    if (next.has(name)) next.delete(name); else next.add(name);
+    return next;
+  });
+
+  const revoke = async (m) => {
+    setRevoking(null);
+    try {
+      await removeItem(['members', m.id]);
+      onToast('Device revoked');
+    } catch {
+      onToast("Couldn't revoke — check your connection");
+    }
+  };
+
+  const deviceLabel = (m) => inviteById.get(m.inviteToken)?.label || 'revoked link';
 
   return (
     <section className="settings__section">
-      <SectionHead label="Device links"
-        action={<Button size="sm" variant="primary" onClick={() => setSheet({ phase: 'form' })}>New device link</Button>} />
+      <SectionHead label="Members" />
       <div className="settings__list">
-        {sorted.map((inv) => (
-          <div className="row row--static" key={inv.id}>
-            <span className="row__main">
-              <div className="row__title">{inv.label}</div>
-              <div className="row__meta">Created {fmtDate(inv.createdAt)}</div>
-            </span>
-            <span className="row__acc">
-              <Button size="sm" variant="secondary" onClick={() => copyLink(inv.id)}>Copy link</Button>
-              <Button size="sm" variant="destructive" onClick={() => setRevoking(inv)}>Revoke</Button>
-            </span>
-          </div>
-        ))}
-        {!loading && invites.length === 0 && (
-          <EmptyState line="No device links yet — mint one per phone and hand it over." />
+        {people.map((person) => {
+          const expanded = open.has(person.name);
+          const mine = person.name === currentName;
+          const n = person.devices.length;
+          return (
+            <Fragment key={person.name}>
+              <button type="button" className="row person" aria-expanded={expanded}
+                onClick={() => toggle(person.name)}>
+                <Chevron open={expanded} />
+                <span className="row__main">
+                  <span className="row__title">{person.name}{mine ? ' · you' : ''}</span>
+                </span>
+                <span className="person__count">{n} device{n === 1 ? '' : 's'}</span>
+              </button>
+              {expanded && (
+                <div className="devicelist">
+                  {person.devices.map((m) => (
+                    <div className="row row--static device" key={m.id}>
+                      <span className="row__main">
+                        <span className="row__title">
+                          {deviceLabel(m)}{m.id === uid ? ' · this device' : ''}
+                        </span>
+                        <span className="row__meta">Joined {fmtDate(m.joinedAt)}</span>
+                      </span>
+                      <Button size="sm" variant="destructive" onClick={() => setRevoking(m)}>Revoke</Button>
+                    </div>
+                  ))}
+                  {mine && (
+                    <button type="button" className="row adddevice"
+                      onClick={() => setSheet({ kind: 'device' })}>
+                      <span className="row__main">
+                        <span className="row__title adddevice__label">+ Add device</span>
+                      </span>
+                    </button>
+                  )}
+                </div>
+              )}
+            </Fragment>
+          );
+        })}
+        {!loading && people.length === 0 && (
+          <EmptyState line="No members yet — invite someone below to let the family in." />
         )}
+      </div>
+
+      <div className="settings__invitecta">
+        <Button variant="primary" block onClick={() => setSheet({ kind: 'invite' })}>
+          Invite someone
+        </Button>
       </div>
 
       {revoking && (
         <ConfirmDialog
-          title={`Revoke link "${revoking.label}"?`}
-          body="New joins via this link stop immediately; devices that already joined keep access (revoke them under Members)."
+          title={`Revoke ${revoking.name}'s ${deviceLabel(revoking)}?`}
+          body={revoking.id === uid
+            ? `Careful — this is THE DEVICE YOU'RE USING RIGHT NOW. Revoke it and you (${revoking.name}) lose portal access here immediately; you'll need a fresh invite to get back in.`
+            : `${revoking.name}'s ${deviceLabel(revoking)} will lose access immediately.`}
           confirmLabel="Revoke"
           onConfirm={() => revoke(revoking)}
           onCancel={() => setRevoking(null)}
         />
       )}
 
-      {sheet?.phase === 'form' && (
-        <BottomSheet title="New device link" onClose={closeSheet}
-          submit={<Button variant="primary" block disabled={saving} onClick={create}>
-            {saving ? 'Creating…' : 'Create link'}</Button>}>
-          <Field label="Label" error={labelErr}
-            hint={`Whose device this link is for — e.g. "Mai's phone".`}>
-            <Input value={label} autoFocus placeholder="Mai's phone"
-              onChange={(e) => { setLabel(e.target.value); setLabelErr(null); }}
-              onKeyDown={(e) => { if (e.key === 'Enter') create(); }} />
-          </Field>
-        </BottomSheet>
-      )}
-
-      {sheet?.phase === 'done' && (
-        <BottomSheet title="Link ready" onClose={closeSheet}
-          submit={<Button variant="secondary" block onClick={closeSheet}>Done</Button>}>
-          <div className="linkdone">
-            Send this to <b>{sheet.label}</b> — opening it joins that device to the portal.
-          </div>
-          <span className="linkbox">{joinUrl(sheet.token)}</span>
-          <Button variant="primary" block onClick={() => copyLink(sheet.token)}>Copy link</Button>
-        </BottomSheet>
+      {sheet && (
+        <InviteSheet kind={sheet.kind} memberName={currentName}
+          onClose={() => setSheet(null)} onToast={onToast} />
       )}
     </section>
   );
@@ -321,7 +357,7 @@ function InvitesSection({ invites, loading, onToast }) {
 
 export default function SettingsPage() {
   const [toast, setToast] = useState(null);
-  const { docs: invites, loading: invitesLoading } = useCollection(['invites']);
+  const { docs: invites } = useCollection(['invites']);
 
   const showToast = (msg) => {
     setToast(msg);
@@ -336,7 +372,6 @@ export default function SettingsPage() {
 
       <FeaturesSection onToast={showToast} />
       <MembersSection invites={invites} onToast={showToast} />
-      <InvitesSection invites={invites} loading={invitesLoading} onToast={showToast} />
 
       {toast && <div className="toast">{toast}</div>}
     </div>

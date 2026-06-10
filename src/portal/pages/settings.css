@@ -1,6 +1,7 @@
-/* settings.css — Settings page (specs 03/04): feature-flag switches,
-   members list, device invite links. Extends components.css conventions:
-   flat fills, 1px hairlines, block__elem class names, token vars only. */
+/* settings.css — Settings page (specs 03/04): feature-flag switches and the
+   Members section (people grouped by name, expandable per-device rows, invite
+   minting). Extends components.css conventions: flat fills, 1px hairlines,
+   block__elem class names, token vars only. */
 
 .settings { padding: var(--gutter) var(--gutter) var(--s8); }
 
@@ -64,6 +65,31 @@
 .switch:focus-visible .switch__track {
   box-shadow: 0 0 0 2px var(--input-focus);
 }
+
+/* ============================== MEMBERS (spec 04) =========================== */
+/* person row — whole row tappable, expands to the device list below */
+.person { width: 100%; text-align: left; }
+.person__chev {
+  color: var(--text-muted); line-height: 0; flex-shrink: 0;
+  transition: transform .15s;
+}
+.person__chev svg { display: block; }
+.person__chev--open { transform: rotate(90deg); }
+.person__count {
+  font-size: 12px; color: var(--text-muted); white-space: nowrap; flex-shrink: 0;
+}
+
+/* expanded device list — inset panel under the person row */
+.devicelist { background: var(--surface-2); }
+.settings__list .devicelist .row { padding-left: 38px; }
+.devicelist .row__title { font-size: 13.5px; }
+
+/* "+ Add device" — only inside the current user's expanded section */
+.adddevice { width: 100%; text-align: left; }
+.adddevice__label { color: var(--accent); font-weight: 700; }
+
+/* "Invite someone" CTA below the members list */
+.settings__invitecta { margin-top: var(--s3); }
 
 /* ============================== INVITE LINK SHEET =========================== */
 .linkbox {

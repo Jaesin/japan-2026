@@ -1,9 +1,11 @@
 rules_version = '2';
 
-// Security model: per-device invite links -> member registration.
+// Security model: per-person identity, per-device invite links -> member registration.
 // See specs/04-user-management.md (supersedes spec 01's single shared token). Summary:
 //  - invites/{token}: doc ID is the capability token. Members create/revoke them
-//    from Settings -> Users. Never publicly readable.
+//    from Settings -> Users. Public `get` (the join flow reads memberName before
+//    the user is a member; the unguessable token is the secret) but member-only
+//    `list` so tokens can't be harvested in bulk.
 //  - A signed-in (anonymous) uid registers members/{uid} by presenting a valid
 //    inviteToken plus a required display name.
 //  - Membership (doc existence) is the credential for everything else.
@@ -38,10 +40,15 @@ service cloud.firestore {
         allow write: if isMember() && !(docId in ['secret', 'features']);
       }
 
-      // Device invite links (spec 04). The {token} ID is the secret — never public-read.
-      // Immutable: create + delete (revoke) only.
+      // Device invite links (spec 04). `get` is public: the join flow must read
+      // memberName before the user is a member, and the unguessable {token} ID is
+      // the capability (label/memberName aren't sensitive). `list` stays member-only
+      // — a public list would let anyone harvest every live token, defeating the
+      // capability model. Immutable: create + delete (revoke) only.
       match /invites/{token} {
-        allow read, delete: if isMember();
+        allow get: if true;
+        allow list: if isMember();
+        allow delete: if isMember();
         allow create: if isMember() && token.size() >= 20;
       }
 

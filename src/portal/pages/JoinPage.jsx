@@ -1,12 +1,19 @@
-// JoinPage — /#/join?key=<token> invite flow (specs 01/04), adapted from
-// artifacts/portal_handoff/screens/JoinFlow/JoinFlow.jsx. Per spec 04 the
-// prototype's who-are-you picker is replaced by a REQUIRED free-text name
-// (1–40 chars). There's no pre-validation read of the invite — the denied
-// members/{uid} write IS the check; permission-denied → "link isn't active".
+// JoinPage — /#/join?key=<token>[&name=<hint>] invite flow (specs 01/04),
+// adapted from artifacts/portal_handoff/screens/JoinFlow/JoinFlow.jsx.
+// Per spec 04 (revised): after silent anonymous sign-in we READ the invite doc
+// (invites are publicly readable — the token is the capability).
+//  - Device invite (memberName present): skip the name form entirely and
+//    register with the invite's memberName (the ?name= param is display-only —
+//    the stored value comes from the doc, preventing URL tampering).
+//  - User invite (no memberName): show the required free-text name form
+//    (1–40 chars); ?name= merely pre-fills it as a hint.
+// A missing invite doc — or a denied members/{uid} write — → "link isn't active".
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { doc, getDoc } from 'firebase/firestore';
 import { getTodayInfo } from '../../tripData.js';
+import { db, ensureSignedIn, TRIP_ID } from '../../firebase.js';
 import { useMember } from '../../auth/useMember.js';
 import { Button, Field, Input } from '../ui/ui.jsx';
 import { Fuji, SunBurst } from '../ui/primitives.jsx';
@@ -62,13 +69,50 @@ export default function JoinPage() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const inviteKey = params.get('key') || '';
+  const nameHint = params.get('name') || '';
   const { status, member, join, loading } = useMember();
 
   const [step, setStep] = useState('welcome'); // welcome | name
-  const [name, setName] = useState('');
+  const [name, setName] = useState(nameHint); // ?name= pre-fills as a hint only
   const [fieldError, setFieldError] = useState(null);
   const [linkDead, setLinkDead] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [invite, setInvite] = useState(undefined); // undefined = not read yet
+  const [autoErr, setAutoErr] = useState(null); // device-invite auto-join failure
+  const [retryTick, setRetryTick] = useState(0); // bump to re-run the auto-join
+  const autoJoined = useRef(false); // device invite: register once per attempt
+
+  // Spec 04 step 1+2: silent anonymous sign-in, then read the invite doc to
+  // learn whether this is a device invite (memberName present).
+  useEffect(() => {
+    if (!inviteKey) return undefined;
+    let cancelled = false;
+    (async () => {
+      try {
+        await ensureSignedIn();
+        const snap = await getDoc(doc(db, 'trips', TRIP_ID, 'invites', inviteKey));
+        if (cancelled) return;
+        if (!snap.exists()) setLinkDead(true);
+        else setInvite(snap.data());
+      } catch {
+        if (!cancelled) setLinkDead(true); // unreadable invite ≈ dead link
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [inviteKey]);
+
+  // Device invite: skip the name form, register immediately with the
+  // invite's memberName.
+  const inviteMemberName = invite?.memberName;
+  useEffect(() => {
+    if (!inviteMemberName || autoJoined.current) return;
+    if (loading || status === 'member') return;
+    autoJoined.current = true;
+    join(inviteKey, inviteMemberName).catch((err) => {
+      if (err?.code === 'permission-denied') setLinkDead(true);
+      else setAutoErr(err?.message || 'Something went wrong — try again.');
+    });
+  }, [inviteMemberName, loading, status, inviteKey, join, retryTick]);
 
   const submit = async () => {
     const trimmed = name.trim();
@@ -126,6 +170,28 @@ export default function JoinPage() {
         <div style={{ marginTop: 'auto', paddingTop: 24 }}>
           <Button variant="secondary" block onClick={() => navigate('/')}>Back to the poster</Button>
         </div>
+      </div>
+    );
+  } else if (invite === undefined) {
+    // Signed in; still reading the invite doc (spec 04 step 2).
+    body = <div className="metaline" style={{ marginTop: 24, textAlign: 'center' }}>Checking your boarding pass…</div>;
+  } else if (invite.memberName) {
+    // Device invite — registration runs automatically, no name form.
+    body = (
+      <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', flex: 1 }}>
+        <div className="disp" style={{ fontSize: 36, lineHeight: 0.9 }}>Welcome back,<br />{invite.memberName}.</div>
+        <p style={{ fontFamily: 'var(--font-jp)', fontSize: 15, lineHeight: 1.55, opacity: 0.85, marginTop: 14, maxWidth: 320 }}>
+          {autoErr || 'Adding this device to your account…'}
+        </p>
+        {autoErr && (
+          <div style={{ marginTop: 'auto', paddingTop: 24 }}>
+            <Button variant="primary" block onClick={() => {
+              setAutoErr(null);
+              autoJoined.current = false;
+              setRetryTick((t) => t + 1); // re-run the auto-join effect
+            }}>Try again</Button>
+          </div>
+        )}
       </div>
     );
   } else if (step === 'welcome') {

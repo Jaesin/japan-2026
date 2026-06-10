@@ -40,6 +40,19 @@ The current public page was ported from a Claude Design handoff at `~/Downloads/
 
 Project `japan-2026-6363d`: Firestore in `asia-southeast1`, Anonymous Auth enabled. `src/firebaseConfig.js` holds the (non-secret) web config + `TRIP_ID`; `src/firebase.js` initializes the SDK with persistent offline cache and exports `ensureSignedIn()`. Security model is capability-link → member registration, enforced in `firestore.rules` (see `specs/01-access-and-security.md` — it supersedes PROJECT_SPEC §7). Deploy rules with `firebase deploy --only firestore:rules`. Scripts: `scripts/seed.mjs` (idempotent seed; needs `firestore.bootstrap.rules` deployed via `firebase deploy --config firebase.bootstrap.json --only firestore:rules` only for first-ever secret creation), `scripts/verify.mjs` (end-to-end rules check), `scripts/prune-members.mjs` (revoke all device registrations). The family access token lives at `~/.config/japan-2026/access-token` — never commit or print it.
 
+## Firestore access from scripts / CLI
+
+**Never use anonymous sign-in in scripts** — it creates stale member docs that pollute the members list. Use the Firebase CLI credentials instead:
+
+- **Reads**: Firestore has no CLI read command. Use the REST API with the cached CLI token:
+  ```js
+  const cfg = JSON.parse(fs.readFileSync(os.homedir() + '/.config/configstore/firebase-tools.json', 'utf8'));
+  const token = cfg.tokens?.access_token;
+  // then: fetch(`https://firestore.googleapis.com/v1/projects/japan-2026-6363d/databases/(default)/documents/trips/japan-2026/...`, { headers: { Authorization: 'Bearer ' + token } })
+  ```
+- **Deletes**: `firebase firestore:delete --project japan-2026-6363d --yes 'trips/japan-2026/collection/docId'`
+- **Writes/updates** that require member auth (e.g. `config/features`): use the REST API with the CLI token — the Firestore REST API respects the same security rules, and the CLI token is an owner-level credential that bypasses them.
+
 ## Not yet built
 
-The portal UI (join flow, `useMember` hook, all portal pages) and Hermes write integrations. `specs/` holds the triage-ready feature specs (`specs/README.md` is the index); nothing in `src/` implements them beyond the Firebase foundation above.
+Hermes write integrations. `specs/` holds the triage-ready feature specs (`specs/README.md` is the index); specs 00–04 and 10 are built.

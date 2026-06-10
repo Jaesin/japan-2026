@@ -117,7 +117,9 @@ export default function PortalShell() {
     <div className="portal shell">
       <Sidebar items={items} active={activeId} onNav={onNav} />
       <div className="shell__col">
-        <TodayStrip {...strip} />
+        <div onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
+          <TodayStrip {...strip} />
+        </div>
         <div className="shell__scroll">
           <Routes>
             <Route index element={<PortalHome enabled={enabled} loading={featuresLoading} />} />
