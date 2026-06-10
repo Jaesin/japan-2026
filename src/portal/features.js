@@ -5,9 +5,19 @@
 // (ui/primitives.jsx); `blurb` is the home-card one-liner.
 //
 // Settings is NOT a feature flag (spec 03) — it's always in nav for members.
+//
+// `group` keys into FEATURE_GROUPS (spec 03: Settings toggles are grouped like
+// the specs index — Planning / During the trip / Other). Flag keys missing from
+// this registry fall into 'other'.
+
+export const FEATURE_GROUPS = [
+  { id: 'planning', label: 'Planning' },
+  { id: 'trip', label: 'During the trip' },
+  { id: 'other', label: 'Other' },
+];
 
 export const FEATURES = [
-  { id: 'tasks', label: 'Tasks', ico: 'tasks', path: '/portal/tasks', blurb: "Who's doing what before we fly." },
+  { id: 'tasks', label: 'Tasks', ico: 'tasks', path: '/portal/tasks', group: 'planning', blurb: "Who's doing what before we fly." },
 ];
 
 export const HOME_ITEM = { id: 'home', label: 'Home', ico: 'today', path: '/portal' };

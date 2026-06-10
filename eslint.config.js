@@ -7,7 +7,9 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 export default [
   // `artifacts/` holds raw design-handoff prototypes (in-browser Babel, window
   // globals) — reference material, not shipped code; lint only what ships.
-  { ignores: ['dist', 'artifacts'] },
+  // `tests/` is Node-environment Playwright/Cucumber code — this config's
+  // browser globals and React rules don't apply to it.
+  { ignores: ['dist', 'artifacts', 'tests'] },
   {
     files: ['**/*.{js,jsx}'],
     languageOptions: {

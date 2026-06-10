@@ -1,0 +1,83 @@
+/* tasks.css — Task board page (spec 10). Extends components.css conventions:
+   flat fills, 1px hairlines, block__elem class names, token vars only. */
+
+.tasks { padding-bottom: 140px; /* clearance for the floating "+" */ }
+
+.tasks__head { padding: 16px var(--gutter) 10px; }
+.tasks__title { font-size: 40px; line-height: 0.9; margin: 6px 0 0; font-weight: 400; }
+
+/* horizontally scrolling filter rows */
+.tasks__filters {
+  display: flex; gap: 8px; overflow-x: auto;
+  padding: 4px var(--gutter) 10px;
+  scrollbar-width: none;
+}
+.tasks__filters::-webkit-scrollbar { display: none; }
+.tasks__filters--last { padding-top: 0; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+
+/* group headers (Done's is a button that collapses the group) */
+.tasks__grouphead {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  padding: 14px var(--gutter) 4px; white-space: nowrap;
+  background: none; border: none; color: var(--text); text-align: left;
+  -webkit-tap-highlight-color: transparent;
+}
+.tasks__chev {
+  width: 8px; height: 8px; margin-left: 2px;
+  border-right: 2px solid var(--text-muted); border-bottom: 2px solid var(--text-muted);
+  transform: rotate(45deg) translateY(-2px);  /* pointing down = expanded */
+  transition: transform 0.12s;
+}
+.tasks__chev--closed { transform: rotate(-45deg); /* pointing right = collapsed */ }
+
+/* task row — div.row hosting two buttons (cycle + open), handoff pattern */
+.tasks__row { padding-right: 10px; }
+.tasks__rowmain {
+  background: none; border: none; padding: 0; margin: 0;
+  text-align: left; font: inherit; color: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* one-tap status cycle: open → doing → done → open */
+.tasks__cycle {
+  flex-shrink: 0; width: 40px; height: 40px; margin-left: -8px;
+  display: flex; align-items: center; justify-content: center;
+  background: none; border: none; padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.tasks__cycle:active .tcheck { background: var(--press-overlay); }
+.tcheck {
+  width: 24px; height: 24px; border: 1.5px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.12s, border-color 0.12s;
+}
+.tcheck--doing { border-color: var(--warning); background: var(--warning-bg); }
+.tcheck--doing::after {
+  content: ''; width: 10px; height: 10px; border-radius: 50%; background: var(--warning);
+}
+.tcheck--done { background: var(--accent); border-color: var(--accent); }
+.tasks__cycle:active .tcheck--done { background: var(--accent-press); }
+.tcheck--done::after {
+  content: ''; width: 11px; height: 6px; margin-top: -2px;
+  border-left: 2px solid var(--on-accent); border-bottom: 2px solid var(--on-accent);
+  transform: rotate(-45deg);
+}
+
+/* chip rows inside the add/edit sheet */
+.tasks__chips { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* floating add button — sits above the mobile tab bar */
+.tasks__fab {
+  position: fixed; right: 18px;
+  bottom: calc(74px + env(safe-area-inset-bottom));
+  width: 56px; height: 56px; border-radius: 50%;
+  background: var(--accent); color: var(--on-accent);
+  border: none; font-size: 30px; line-height: 1; font-weight: 400;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 50; -webkit-tap-highlight-color: transparent;
+}
+.tasks__fab:active { background: var(--accent-press); }
+@media (min-width: 768px) {
+  .tasks__fab { right: 28px; bottom: 28px; }
+}

@@ -1,0 +1,77 @@
+/* settings.css — Settings page (specs 03/04): feature-flag switches,
+   members list, device invite links. Extends components.css conventions:
+   flat fills, 1px hairlines, block__elem class names, token vars only. */
+
+.settings { padding: var(--gutter) var(--gutter) var(--s8); }
+
+.settings__section { margin-top: var(--s7); }
+.settings__section:first-of-type { margin-top: var(--s5); }
+.settings__head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 10px; margin-bottom: var(--s2);
+}
+.settings__list {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r-md); overflow: hidden;
+}
+.settings__list .row { padding-left: 14px; padding-right: 14px; }
+.settings__list .row:last-child { border-bottom: none; }
+/* static rows (not whole-row tappable) — neutralize button press feedback */
+.row--static:active { background: transparent; }
+.row--static { cursor: default; }
+
+/* feature-group sub-label inside the Features list (spec 03: Planning /
+   During the trip / Other) */
+.settings__group {
+  padding: 12px 14px 5px;
+  font-size: 11px; font-weight: 700; letter-spacing: .8px;
+  text-transform: uppercase; color: var(--text-muted);
+}
+
+/* locked (always-on) feature row */
+.row--locked .row__title { color: var(--text-muted); }
+.lock { color: var(--text-muted); line-height: 0; flex-shrink: 0; }
+.lock svg { display: block; }
+.row--locked .row__on { font-size: 11px; font-weight: 700; letter-spacing: .8px;
+  text-transform: uppercase; color: var(--text-muted); white-space: nowrap; }
+
+/* ============================== SWITCH ====================================== */
+/* No switch exists in the kit — flat fill, 1px border, accent when on. */
+.switch {
+  display: flex; align-items: center; justify-content: center;
+  width: 56px; min-height: var(--tap); padding: 0; flex-shrink: 0;
+  background: transparent; border: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.switch__track {
+  position: relative; width: 46px; height: 26px;
+  border: 1px solid var(--line-strong); border-radius: var(--r-pill);
+  background: var(--surface-2);
+  transition: background .15s, border-color .15s;
+}
+.switch__thumb {
+  position: absolute; top: 2px; left: 2px; width: 20px; height: 20px;
+  border-radius: 50%; background: var(--text-muted);
+  transition: left .15s, background .15s;
+}
+.switch[aria-checked="true"] .switch__track {
+  background: var(--accent); border-color: var(--accent);
+}
+.switch[aria-checked="true"] .switch__thumb {
+  left: 23px; background: var(--on-accent);
+}
+.switch:disabled { opacity: .5; pointer-events: none; }
+.switch:focus-visible .switch__track {
+  box-shadow: 0 0 0 2px var(--input-focus);
+}
+
+/* ============================== INVITE LINK SHEET =========================== */
+.linkbox {
+  display: block; width: 100%; padding: 11px 12px; margin-bottom: var(--s4);
+  font-family: var(--font-body); font-size: 13px; color: var(--text);
+  background: var(--surface-2); border: 1px solid var(--line);
+  border-radius: var(--r-md); word-break: break-all; line-height: 1.45;
+  user-select: all; -webkit-user-select: all;
+}
+.linkdone { font-size: 13.5px; color: var(--text); opacity: .82;
+  line-height: 1.45; margin-bottom: var(--s4); }
