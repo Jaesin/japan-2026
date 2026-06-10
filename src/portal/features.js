@@ -20,6 +20,7 @@ export const FEATURES = [
   { id: 'tasks', label: 'Tasks', ico: 'tasks', path: '/portal/tasks', group: 'planning', blurb: "Who's doing what before we fly." },
   { id: 'packing', label: 'Packing', ico: 'packing', path: '/portal/packing', group: 'planning', blurb: "Who's got what covered." },
   { id: 'phrases', label: 'Phrasebook', ico: 'docs', path: '/portal/phrases', group: 'trip', blurb: 'Phrases, show-cards, and Japan tips.' },
+  { id: 'transport', label: 'Transport', ico: 'itinerary', path: '/portal/transport', group: 'planning', blurb: 'Every leg — flights, trains, transfers.' },
 ];
 
 export const HOME_ITEM = { id: 'home', label: 'Home', ico: 'today', path: '/portal' };
