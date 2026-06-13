@@ -115,6 +115,12 @@
 }
 .research-detail__value { flex: 1; line-height: 1.4; white-space: pre-wrap; }
 
+/* Notes block — rendered markdown (or plain text), full width below the rows. */
+.research-detail__notes { margin-top: 14px; }
+.research-detail__notes-label {
+  color: var(--text-muted); font-size: 12px; margin-bottom: 6px;
+}
+
 .research-detail__actions { display: flex; gap: 10px; margin-top: 18px; }
 
 /* "Add to food list" promote (spec 11→18) */

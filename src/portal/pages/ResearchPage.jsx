@@ -11,7 +11,7 @@ import { useCollection } from '../../data/useCollection.js';
 import { addItem, removeItem, updateItem } from '../../data/mutate.js';
 import { isEnabled, useFeatures } from '../../data/useFeatures.js';
 import { useMember } from '../../auth/useMember.js';
-import { Button, EmptyState, Field, FilterChip, Input, Select, StatusChip, Textarea } from '../ui/ui.jsx';
+import { Button, EmptyState, Field, FilterChip, Input, MarkdownText, Select, StatusChip, Textarea } from '../ui/ui.jsx';
 import { BottomSheet, ConfirmDialog } from '../ui/overlays.jsx';
 import { ROUTE } from '../../tripData.js';
 import './research.css';
@@ -34,6 +34,22 @@ const EMPTY_FORM = {
   title: '', url: '', notes: '', city: GENERAL, category: 'sight',
   tags: '', cost: '', lat: '', lng: '', status: 'idea',
 };
+
+/* Strip common markdown syntax to a flat string for the 1-line card preview —
+   rendering real markdown in a clamped box would show stray #, *, ` chars. */
+function stripMarkdown(text) {
+  return String(text || '')
+    .replace(/```[\s\S]*?```/g, ' ')         // fenced code blocks
+    .replace(/`([^`]+)`/g, '$1')             // inline code
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')   // images
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1') // links → label
+    .replace(/^\s{0,3}#{1,6}\s+/gm, '')      // headings
+    .replace(/^\s{0,3}>\s?/gm, '')           // blockquotes
+    .replace(/^\s{0,3}[-*+]\s+/gm, '')       // bullet markers
+    .replace(/(\*\*|__|\*|_|~~)/g, '')       // emphasis markers
+    .replace(/\s+/g, ' ')
+    .trim();
+}
 
 /* star helpers — stars is a map { [memberName]: true } */
 const starCount = (stars) => (stars ? Object.keys(stars).length : 0);
@@ -90,6 +106,7 @@ function StarButton({ stars, memberName, onToggle, big }) {
 /* ---- add / edit form -------------------------------------------------------- */
 function ResearchForm({ initial, onSubmit, submitLabel }) {
   const [form, setForm] = useState(initial);
+  const [notesTab, setNotesTab] = useState('write'); // 'write' | 'preview'
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
   const valid = form.title.trim().length > 0;
 
@@ -104,8 +121,30 @@ function ResearchForm({ initial, onSubmit, submitLabel }) {
       <Field label="Link (optional)" hint="Source URL — blog, map, official site.">
         <Input type="url" value={form.url} onChange={set('url')} placeholder="https://…" />
       </Field>
-      <Field label="Notes" hint="Summary / why it's interesting.">
-        <Textarea rows={3} value={form.notes} onChange={set('notes')} placeholder="Ten thousand vermilion gates — go early to beat crowds." />
+      <Field label="Notes" hint="Markdown supported — **bold**, lists, [links](url).">
+        <div className="md-editor">
+          <div className="md-editor__tabs" role="tablist">
+            <button
+              type="button" role="tab" aria-selected={notesTab === 'write'}
+              className={'md-editor__tab' + (notesTab === 'write' ? ' md-editor__tab--on' : '')}
+              onClick={() => setNotesTab('write')}
+            >Write</button>
+            <button
+              type="button" role="tab" aria-selected={notesTab === 'preview'}
+              className={'md-editor__tab' + (notesTab === 'preview' ? ' md-editor__tab--on' : '')}
+              onClick={() => setNotesTab('preview')}
+            >Preview</button>
+          </div>
+          {notesTab === 'write' ? (
+            <Textarea rows={4} value={form.notes} onChange={set('notes')} placeholder="Ten thousand vermilion gates — go early to beat crowds." />
+          ) : (
+            <div className="md-editor__preview">
+              {form.notes.trim()
+                ? <MarkdownText className="research-detail__value">{form.notes}</MarkdownText>
+                : <span className="md-editor__empty">Nothing to preview yet.</span>}
+            </div>
+          )}
+        </div>
       </Field>
       <div className="research-form__pair">
         <Field label="City">
@@ -154,7 +193,6 @@ function ResearchDetail({ item, memberName, onStar, onPin, onEdit, onDelete, onA
     ['Cost', item.cost],
     ['Tags', (item.tags || []).join(' · ')],
     ['Coords', Array.isArray(item.ll) ? item.ll.join(', ') : ''],
-    ['Notes', item.notes],
   ].filter(([, v]) => v);
 
   return (
@@ -180,6 +218,13 @@ function ResearchDetail({ item, memberName, onStar, onPin, onEdit, onDelete, onA
           </div>
         ))}
       </div>
+
+      {item.notes && (
+        <div className="research-detail__notes">
+          <div className="research-detail__notes-label">Notes</div>
+          <MarkdownText className="research-detail__value">{item.notes}</MarkdownText>
+        </div>
+      )}
 
       {/* "Add to itinerary…" (spec 12) is still deferred. "Add to food list"
           (spec 18) is wired: food finds can be promoted into the food list. */}
@@ -220,7 +265,7 @@ function ResearchCard({ item, memberName, onOpen, onStar }) {
         <span className="research-card__title">{item.title}</span>
         <StatusChip status={item.status} />
       </div>
-      {item.notes && <div className="research-card__note">{item.notes}</div>}
+      {item.notes && <div className="research-card__note">{stripMarkdown(item.notes)}</div>}
       <div className="research-card__foot">
         <span className="research-card__cattag">{CAT_LABEL[item.category] || item.category}</span>
         <StarButton stars={item.stars} memberName={memberName} onToggle={onStar} />

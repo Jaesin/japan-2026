@@ -3,8 +3,39 @@
    ESM port of artifacts/portal_handoff/components/ui/ui.jsx (window globals →
    named exports; window.PORTAL.{CAT_ICON,yen} → imports from ../format.js). */
 
+import { lazy, Suspense } from 'react';
 import { SunBurst } from './primitives.jsx';
 import { CAT_ICON, yen } from '../format.js';
+
+/* ============================== MARKDOWN ==================================== */
+/* The markdown renderer is heavy (react-markdown + remark stack). Keep it in a
+   lazily-loaded chunk so it only downloads when a note that actually contains
+   markdown is rendered. While the chunk loads, show the raw text (pre-wrap) so
+   content is never blank. */
+const LazyMarkdownNote = lazy(() => import('./MarkdownNote.jsx'));
+
+/* Cheap heuristic: does this string contain markdown worth parsing? Headings,
+   emphasis, lists, links, code, blockquotes, tables, rules. If not, we render
+   plain text and never load the markdown chunk at all. */
+const MD_PATTERN = /(^|\n)\s{0,3}(#{1,6}\s|[-*+]\s|\d+\.\s|>\s|```|\|)|\*\*|__|\[[^\]]+\]\([^)]+\)|`[^`]+`|~~|(^|\n)([-*_])\s*\3\s*\3/;
+function looksLikeMarkdown(text) {
+  return typeof text === 'string' && MD_PATTERN.test(text);
+}
+
+/* MarkdownText — auto-detecting note renderer. Plain strings stay plain text
+   (zero extra JS); anything with markdown syntax renders via the lazy chunk.
+   `className` styles the plain-text fallback container. */
+function MarkdownText({ children, className }) {
+  const text = children || '';
+  if (!looksLikeMarkdown(text)) {
+    return <div className={className} style={{ whiteSpace: 'pre-wrap' }}>{text}</div>;
+  }
+  return (
+    <Suspense fallback={<div className={className} style={{ whiteSpace: 'pre-wrap' }}>{text}</div>}>
+      <LazyMarkdownNote source={text} />
+    </Suspense>
+  );
+}
 
 /* ============================== BUTTONS ===================================== */
 function Button({ variant = 'secondary', size, block, disabled, children, onClick, style }) {
@@ -195,4 +226,5 @@ function TodayStrip({ phase = 'during', daysToGo = 25, dayNum = 5, city = 'Kyoto
 
 export { Button, QuickAction, Field, Input, Textarea, AmountInput, Select,
   FilterChip, StatusChip, CatChip, STATUS_LABEL, ListRow, CheckRow, DragHandle,
-  Vote, ResearchCard, ProgressBar, SummaryBar, Rating, EmptyState, TodayStrip };
+  Vote, ResearchCard, ProgressBar, SummaryBar, Rating, EmptyState, TodayStrip,
+  MarkdownText };
