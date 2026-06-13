@@ -26,7 +26,17 @@ export const FEATURES = [
   { id: 'documents', label: 'Docs', ico: 'docs', path: '/portal/documents', group: 'planning', blurb: 'Refs, contacts, and emergency numbers.' },
   { id: 'journal', label: 'Journal', ico: 'journal', path: '/portal/journal', group: 'trip', blurb: 'A 60-second nightly entry.' },
   { id: 'research', label: 'Research', ico: 'research', path: '/portal/research', group: 'planning', blurb: 'Shared shortlist of places and finds.' },
+  { id: 'food', label: 'Food', ico: 'food', path: '/portal/food', group: 'planning', blurb: 'Eat shortlist the kids can vote on.' },
+  { id: 'checkins', label: 'Check-ins', ico: 'pin', path: '/portal/checkins', group: 'trip', blurb: 'Post a dispatch to the public page.' },
+  { id: 'postcards', label: 'Postcards', ico: 'pin', path: '/portal/postcards', group: 'trip', blurb: 'Photo dispatches to the public page.' },
   { id: 'itinerary', label: 'Itinerary', ico: 'itinerary', path: '/portal/itinerary', group: 'planning', blurb: 'The day-by-day plan.' },
+  { id: 'map', label: 'Map', ico: 'map', path: '/portal/map', group: 'trip', blurb: 'Everything on one map.' },
+  { id: 'activity', label: 'Activity', ico: 'today', path: '/portal/activity', group: 'other', blurb: 'What changed, latest first.' },
+  // Today dashboard (spec 20): the /portal landing page itself, not a nav tab.
+  // `hidden` keeps it out of the bottom tabs / sidebar / home feature-card list,
+  // but it still shows as a Settings toggle (the family flips it on as the trip
+  // nears). No `path` — it's not routed separately; PortalHome renders it.
+  { id: 'today', label: 'Today dashboard', ico: 'today', group: 'trip', hidden: true, blurb: 'During-trip home screen.' },
 ];
 
 export const HOME_ITEM = { id: 'home', label: 'Home', ico: 'today', path: '/portal' };

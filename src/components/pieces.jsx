@@ -1,4 +1,5 @@
 // pieces.jsx — small shared building blocks used by both posters.
+import { useEffect, useRef, useState } from 'react';
 import { Sun } from './motifs';
 
 // Uppercase tracked eyebrow label.
@@ -71,6 +72,158 @@ export function FeedHeader({ ink, accent, muted, font, displayFont }) {
         <span style={{ fontFamily: displayFont, fontSize: 22, color: ink, letterSpacing: 0.5 }}>Dispatches</span>
       </div>
       <span style={{ fontSize: 10, letterSpacing: 1.5, color: muted, fontWeight: 700, textTransform: 'uppercase' }}>Live July 4</span>
+    </div>
+  );
+}
+
+// Pre-trip / empty dispatch state — a single tasteful line in the SAME card
+// shell as CheckinCard (matched container styling), shown when there are zero
+// real check-ins so the feed never sits on stale sample data.
+export function EmptyDispatch({ accent, ink, paper, muted, font, displayFont }) {
+  return (
+    <div style={{
+      display: 'flex', gap: 12, alignItems: 'center', padding: '14px',
+      background: paper, border: `1px solid ${muted}33`, borderLeft: `4px solid ${accent}`,
+      fontFamily: font,
+    }}>
+      <Sun size={26} color={accent} style={{ marginTop: 0, opacity: 0.5 }} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontFamily: displayFont, fontSize: 18, color: ink, letterSpacing: 0.3 }}>Dispatches begin July 4</div>
+        <div style={{ fontSize: 12.5, color: ink, opacity: 0.78, lineHeight: 1.45, marginTop: 3 }}>The first postcard lands when the family does.</div>
+      </div>
+    </div>
+  );
+}
+
+// ── Postcards strip (spec 22) ──────────────────────────────────────────────
+// An ADDITIVE poster section: a horizontal strip of retro photo-cards, each a
+// member's posted photo on a cream/paper border with a slight alternating
+// rotation, caption, place + relative time. Matches CheckinCard's border/color/
+// font idioms (all colors via the passed theme tokens — works in both modes).
+// Newest first, max 12. The data-URL images are heavy, so each <img src> is
+// deferred until the strip scrolls into view (IntersectionObserver); a neutral
+// paper placeholder holds the layout so nothing jumps. Tapping a card opens a
+// lightweight full-screen overlay; tap anywhere to dismiss.
+
+// One photo card. Defers its real src until `armed` (strip is in view).
+function PostcardCard({ card, rot, armed, onOpen, ink, paper, muted, line, font, displayFont }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onOpen(card)}
+      style={{
+        flex: '0 0 auto', width: 188, padding: 10, paddingBottom: 12,
+        background: paper, border: `1px solid ${line}`,
+        boxShadow: `0 1px 0 ${muted}22`, transform: `rotate(${rot}deg)`,
+        cursor: 'pointer', textAlign: 'left', fontFamily: font,
+        WebkitTapHighlightColor: 'transparent', display: 'block',
+      }}
+      aria-label={`Open postcard${card.caption ? `: ${card.caption}` : ''}`}
+    >
+      <div style={{ width: '100%', aspectRatio: '4 / 3', background: `${muted}14`, border: `1px solid ${muted}22`, overflow: 'hidden' }}>
+        {armed && card.img && (
+          <img
+            src={card.img}
+            alt={card.caption || card.place || 'Postcard'}
+            loading="lazy"
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          />
+        )}
+      </div>
+      {card.caption && (
+        <div style={{ fontFamily: displayFont, fontSize: 16, color: ink, letterSpacing: 0.3, lineHeight: 1.15, marginTop: 9, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {card.caption}
+        </div>
+      )}
+      {(card.place || card.when) && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 6, marginTop: card.caption ? 3 : 9 }}>
+          {card.place && <span style={{ fontSize: 11.5, color: ink, opacity: 0.8, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{card.place}</span>}
+          {card.when && <span style={{ fontSize: 10.5, color: muted, fontWeight: 600, whiteSpace: 'nowrap', flex: '0 0 auto' }}>{card.when}</span>}
+        </div>
+      )}
+    </button>
+  );
+}
+
+export function PostcardStrip({ postcards = [], accent, ink, paper, muted, line, font, displayFont }) {
+  const cards = postcards.slice(0, 12);
+  const stripRef = useRef(null);
+  const [armed, setArmed] = useState(false); // images mount only once in view
+  const [open, setOpen] = useState(null);    // the enlarged card, or null
+
+  useEffect(() => {
+    if (armed) return undefined;
+    const el = stripRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') { setArmed(true); return undefined; }
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) { setArmed(true); io.disconnect(); }
+    }, { rootMargin: '200px' });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [armed]);
+
+  if (cards.length === 0) return null;
+
+  return (
+    <div style={{ padding: '4px 30px 28px' }}>
+      <FeedHeaderLabel label="Postcards" sub="From the road" ink={ink} accent={accent} muted={muted} font={font} displayFont={displayFont} />
+      <div
+        ref={stripRef}
+        style={{
+          display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 8, marginInline: -30, paddingInline: 30,
+          scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch',
+        }}
+      >
+        {cards.map((c, i) => (
+          <PostcardCard
+            key={c.id || i}
+            card={c}
+            rot={i % 2 === 0 ? -1.5 : 1.5}
+            armed={armed}
+            onOpen={setOpen}
+            ink={ink} paper={paper} muted={muted} line={line} font={font} displayFont={displayFont}
+          />
+        ))}
+      </div>
+
+      {open && (
+        <div
+          onClick={() => setOpen(null)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.82)',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            padding: 24, cursor: 'zoom-out', fontFamily: font,
+          }}
+        >
+          <img
+            src={open.img}
+            alt={open.caption || open.place || 'Postcard'}
+            style={{ maxWidth: '100%', maxHeight: '76vh', objectFit: 'contain', background: paper, padding: 8, border: `1px solid ${line}` }}
+          />
+          {(open.caption || open.place || open.when) && (
+            <div style={{ marginTop: 14, textAlign: 'center', color: '#fff', maxWidth: 420 }}>
+              {open.caption && <div style={{ fontFamily: displayFont, fontSize: 20, letterSpacing: 0.3 }}>{open.caption}</div>}
+              <div style={{ fontSize: 12.5, opacity: 0.8, marginTop: 4 }}>
+                {[open.place, open.when].filter(Boolean).join(' · ')}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Section header in the FeedHeader voice, reused by the postcard strip so it
+// sits flush with the dispatch feed above it.
+function FeedHeaderLabel({ label, sub, ink, accent, muted, font, displayFont }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, fontFamily: font }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+        <span style={{ width: 8, height: 8, borderRadius: '50%', background: accent, boxShadow: `0 0 0 3px ${accent}33` }} />
+        <span style={{ fontFamily: displayFont, fontSize: 22, color: ink, letterSpacing: 0.5 }}>{label}</span>
+      </div>
+      <span style={{ fontSize: 10, letterSpacing: 1.5, color: muted, fontWeight: 700, textTransform: 'uppercase' }}>{sub}</span>
     </div>
   );
 }

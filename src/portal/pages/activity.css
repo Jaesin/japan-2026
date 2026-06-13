@@ -1,0 +1,98 @@
+/* activity.css — Activity feed page (spec 41). Extends components.css
+   conventions: flat fills, 1px hairlines, block__elem class names, token
+   vars only (tokens.css). */
+
+.activity {
+  padding: var(--gutter);
+  padding-bottom: calc(var(--gutter) + 40px);
+}
+
+/* "N new since you last looked" indicator */
+.activity-new {
+  display: inline-block;
+  margin: 0 0 14px;
+  padding: 5px 12px;
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* day grouping */
+.activity-group { margin-bottom: 8px; }
+.activity-group__head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--bg);
+  padding: 10px 0 6px;
+  color: var(--text-muted);
+}
+
+/* a single entry row */
+.activity-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: var(--tap);
+  padding: 10px 4px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  width: 100%;
+  background: transparent;
+}
+.activity-row--link { cursor: pointer; }
+.activity-row--link:hover { background: var(--press-overlay); }
+.activity-row--link:active { background: var(--press-overlay); }
+.activity-row--link:focus-visible {
+  outline: 2px solid var(--input-focus);
+  outline-offset: -2px;
+}
+
+/* avatar — first letter in a colored disc, or a robot for Hermes */
+.activity-avatar {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--on-accent);
+  line-height: 1;
+}
+.activity-avatar--bot {
+  background: var(--surface-2);
+  font-size: 18px;
+}
+
+.activity-row__main {
+  flex: 1;
+  min-width: 0;
+}
+.activity-row__line {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.35;
+  color: var(--text);
+}
+.activity-row__who { font-weight: 700; }
+.activity-row__sep { color: var(--text-muted); }
+.activity-row__title { color: var(--text-muted); font-style: italic; }
+
+.activity-row__time {
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 2px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}

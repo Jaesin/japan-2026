@@ -1,0 +1,58 @@
+/* tripmap.css — pins specific to the portal TripMap (spec 24). The route pin
+   (.sun-pin) and tile skins are reused from components/map.css; these are the
+   itinerary / accommodation / me pins, kept distinct from the poster's. */
+
+.tm-box {
+  position: absolute;
+  inset: 0;
+  border-radius: 0;
+}
+.tm-canvas {
+  position: absolute;
+  inset: 0;
+}
+
+/* numbered, per-day-colored itinerary pin */
+.tm-pin {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--c);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'Archivo', sans-serif;
+  box-shadow: 0 0 0 2.5px #f4ecd8, 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+
+/* accommodation bed pin — ink fill, emoji glyph */
+.tm-pin--bed {
+  width: 24px;
+  height: 24px;
+  font-size: 13px;
+  line-height: 1;
+}
+
+/* live "me" location — blue dot with a soft pulse */
+.tm-me {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #2f7de1;
+  box-shadow: 0 0 0 3px #fff, 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+.tm-me span {
+  position: absolute;
+  inset: -1px;
+  border-radius: 50%;
+  background: #2f7de1;
+  animation: tm-mepulse 2.1s ease-out infinite;
+}
+@keyframes tm-mepulse {
+  0% { transform: scale(1); opacity: 0.5; }
+  100% { transform: scale(3.2); opacity: 0; }
+}

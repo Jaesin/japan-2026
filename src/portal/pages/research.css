@@ -117,6 +117,14 @@
 
 .research-detail__actions { display: flex; gap: 10px; margin-top: 18px; }
 
+/* "Add to food list" promote (spec 11→18) */
+.research-detail__promote { margin-top: 18px; }
+.research-detail__promoted {
+  padding: 12px 14px; border: 1px solid var(--success); border-radius: var(--r-md);
+  background: var(--success-bg); color: var(--success);
+  font-size: 13px; font-weight: 600; line-height: 1.4;
+}
+
 /* ---- add / edit form -------------------------------------------------------- */
 .research-form { display: grid; gap: 14px; padding-bottom: 8px; }
 .research-form__pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }

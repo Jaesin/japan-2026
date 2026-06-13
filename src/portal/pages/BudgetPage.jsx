@@ -308,7 +308,9 @@ export default function BudgetPage() {
 
   const submitAdd = (entry) => {
     setAddOpen(false);
-    addItem(['budget'], entry).catch(console.error);
+    const amt = entry.amountJPY != null ? `¥${entry.amountJPY}` : entry.amountTHB != null ? `฿${entry.amountTHB}` : '';
+    const title = entry.item || `${CAT_LABELS[entry.category] || entry.category} ${amt}`.trim();
+    addItem(['budget'], entry, { activity: { verb: 'added', title, link: '/portal/budget' } }).catch(console.error);
   };
   const submitEdit = (entry) => {
     setEditing(false);

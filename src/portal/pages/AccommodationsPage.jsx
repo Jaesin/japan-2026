@@ -348,7 +348,7 @@ export default function AccommodationsPage() {
 
   const submitAdd = (data) => {
     setAddOpen(false);
-    addItem(['accommodations'], data).catch(console.error);
+    addItem(['accommodations'], data, { activity: { verb: 'added', title: data.name, link: '/portal/accommodations' } }).catch(console.error);
   };
   const submitEdit = (data) => {
     setEditing(false);

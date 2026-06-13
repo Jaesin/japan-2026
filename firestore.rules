@@ -83,7 +83,10 @@ service cloud.firestore {
       }
       match /postcards/{id} {
         allow read: if true;
-        allow write: if isMember();
+        allow create, update: if isMember()
+          && request.resource.data.img is string
+          && request.resource.data.img.size() < 700000;
+        allow delete: if isMember();
       }
 
       // Every other portal collection (research, itinerary, budget, ...): members-only.

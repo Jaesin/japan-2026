@@ -24,7 +24,12 @@ import AccommodationsPage from './pages/AccommodationsPage.jsx';
 import DocumentsPage from './pages/DocumentsPage.jsx';
 import JournalPage from './pages/JournalPage.jsx';
 import ResearchPage from './pages/ResearchPage.jsx';
+import FoodPage from './pages/FoodPage.jsx';
+import CheckinsPage from './pages/CheckinsPage.jsx';
+import PostcardsPage from './pages/PostcardsPage.jsx';
 import ItineraryPage from './pages/ItineraryPage.jsx';
+import MapPage from './pages/MapPage.jsx';
+import ActivityPage from './pages/ActivityPage.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
 import './styles/tokens.css';
 import './styles/components.css';
@@ -99,7 +104,9 @@ export default function PortalShell() {
   if (status !== 'member') return <NeedsLinkPage />;
 
   // Nav: Home + enabled features (key present AND true) + Settings (always).
-  const enabled = FEATURES.filter((f) => isEnabled(features, f.id));
+  // `hidden` features (e.g. the Today dashboard, spec 20) are flaggable in
+  // Settings but never appear as nav tabs or home feature-cards.
+  const enabled = FEATURES.filter((f) => !f.hidden && isEnabled(features, f.id));
   const items = [HOME_ITEM, ...enabled, SETTINGS_ITEM];
 
   const overflow = items.length > MAX_TABS;
@@ -131,7 +138,7 @@ export default function PortalShell() {
         </div>
         <div className="shell__scroll">
           <Routes>
-            <Route index element={<PortalHome enabled={enabled} loading={featuresLoading} />} />
+            <Route index element={<PortalHome enabled={enabled} features={features} loading={featuresLoading} />} />
             <Route
               path="tasks"
               element={isEnabled(features, 'tasks') ? <TasksPage /> : <FeatureClosedPage loading={featuresLoading} />}
@@ -169,8 +176,28 @@ export default function PortalShell() {
               element={isEnabled(features, 'research') ? <ResearchPage /> : <FeatureClosedPage loading={featuresLoading} />}
             />
             <Route
+              path="food"
+              element={isEnabled(features, 'food') ? <FoodPage /> : <FeatureClosedPage loading={featuresLoading} />}
+            />
+            <Route
+              path="checkins"
+              element={isEnabled(features, 'checkins') ? <CheckinsPage /> : <FeatureClosedPage loading={featuresLoading} />}
+            />
+            <Route
+              path="postcards"
+              element={isEnabled(features, 'postcards') ? <PostcardsPage /> : <FeatureClosedPage loading={featuresLoading} />}
+            />
+            <Route
               path="itinerary"
               element={isEnabled(features, 'itinerary') ? <ItineraryPage /> : <FeatureClosedPage loading={featuresLoading} />}
+            />
+            <Route
+              path="map"
+              element={isEnabled(features, 'map') ? <MapPage /> : <FeatureClosedPage loading={featuresLoading} />}
+            />
+            <Route
+              path="activity"
+              element={isEnabled(features, 'activity') ? <ActivityPage /> : <FeatureClosedPage loading={featuresLoading} />}
             />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="*" element={<FeatureClosedPage loading={featuresLoading} />} />

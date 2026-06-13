@@ -268,14 +268,14 @@ export default function ItineraryPage() {
 
   /* Ensure a day doc exists before writing an embedded activities array to it.
      Falls through to setItem(merge) so deriving days from config still works. */
-  const ensureAndWrite = (day, activities) => {
+  const ensureAndWrite = (day, activities, activity) => {
     if (day.exists) {
-      return updateItem(['itinerary', day.dateId], { activities });
+      return updateItem(['itinerary', day.dateId], { activities }, activity ? { activity } : {});
     }
     return setItem(
       ['itinerary', day.dateId],
       { dayNum: day.dayNum, city: day.city, label: day.label || '', activities },
-      { merge: true },
+      activity ? { merge: true, activity } : { merge: true },
     );
   };
 
@@ -288,7 +288,7 @@ export default function ItineraryPage() {
   const submitAdd = (data) => {
     setAddOpen(false);
     const next = [...(active.activities || []), { id: newActivityId(), ...data, researchId: null, done: false }];
-    ensureAndWrite(active, next).catch(console.error);
+    ensureAndWrite(active, next, { verb: 'added', title: data.title, link: '/portal/itinerary' }).catch(console.error);
   };
 
   const submitEdit = (data) => {

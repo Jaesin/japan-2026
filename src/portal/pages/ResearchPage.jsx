@@ -145,7 +145,7 @@ function ResearchForm({ initial, onSubmit, submitLabel }) {
 }
 
 /* ---- detail sheet ----------------------------------------------------------- */
-function ResearchDetail({ item, memberName, onStar, onPin, onEdit, onDelete, onClose }) {
+function ResearchDetail({ item, memberName, onStar, onPin, onEdit, onDelete, onAddToFood, foodAdded, onClose }) {
   const cityLabel = item.city === GENERAL ? 'General' : item.city;
   const rows = [
     ['Category', `${CAT_ICO[item.category] || '•'} ${CAT_LABEL[item.category] || item.category}`],
@@ -181,8 +181,19 @@ function ResearchDetail({ item, memberName, onStar, onPin, onEdit, onDelete, onC
         ))}
       </div>
 
-      {/* "Add to itinerary…" (spec 12) and "Add to food list" (spec 18) are
-          deferred until those features land — omitted intentionally for now. */}
+      {/* "Add to itinerary…" (spec 12) is still deferred. "Add to food list"
+          (spec 18) is wired: food finds can be promoted into the food list. */}
+      {item.category === 'food' && (
+        <div className="research-detail__promote">
+          {foodAdded ? (
+            <div className="research-detail__promoted">
+              Added to the food list — vote on it over in Food. 🍜
+            </div>
+          ) : (
+            <Button variant="secondary" block onClick={onAddToFood}>Add to food list</Button>
+          )}
+        </div>
+      )}
 
       <div className="research-detail__actions">
         <Button variant="secondary" block onClick={onPin}>{item.pinned ? 'Unpin' : 'Pin'}</Button>
@@ -232,6 +243,7 @@ export default function ResearchPage() {
   const [addOpen, setAddOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [foodAdded, setFoodAdded] = useState(false);
 
   /* Feature gate — wait on the flags doc, never render a broken page. */
   if (featuresLoading) {
@@ -268,7 +280,7 @@ export default function ResearchPage() {
     return (a.title || '').localeCompare(b.title || '');
   });
 
-  const closeDetail = () => { setSelectedId(null); setEditing(false); setConfirmDelete(false); };
+  const closeDetail = () => { setSelectedId(null); setEditing(false); setConfirmDelete(false); setFoodAdded(false); };
 
   const star = (item) => {
     updateItem(['research', item.id], { stars: toggledStars(item.stars, memberName) }).catch(console.error);
@@ -278,7 +290,7 @@ export default function ResearchPage() {
   };
   const submitAdd = (data) => {
     setAddOpen(false);
-    addItem(['research'], { ...data, stars: {}, pinned: false }).catch(console.error);
+    addItem(['research'], { ...data, stars: {}, pinned: false }, { activity: { verb: 'added', title: data.title, link: '/portal/research' } }).catch(console.error);
   };
   const submitEdit = (data) => {
     setEditing(false);
@@ -288,6 +300,28 @@ export default function ResearchPage() {
     const id = selected.id;
     closeDetail();
     removeItem(['research', id]).catch(console.error);
+  };
+  /* Promote a food find into the food list (spec 11→18). Maps the research
+     fields onto the food data model; back-links via researchId. Fine even when
+     the food flag is off — the doc is created; the page just stays hidden. */
+  const addToFood = (item) => {
+    const kid = (item.tags || []).some((t) => String(t).toLowerCase() === 'kids');
+    const mapped = {
+      name: item.title,
+      city: item.city || GENERAL,
+      cuisine: 'other',
+      meal: [],
+      kidFriendly: kid,
+      status: 'idea',
+      votes: {},
+      researchId: item.id,
+    };
+    if (item.notes) mapped.notes = item.notes;
+    if (item.url) mapped.url = item.url;
+    if (Array.isArray(item.ll)) mapped.ll = item.ll;
+    if (item.cost) mapped.cost = item.cost;
+    addItem(['food'], mapped, { activity: { verb: 'added', title: mapped.name, link: '/portal/food' } }).catch(console.error);
+    setFoodAdded(true);
   };
 
   /* edit form initial — flatten ll/tags back into the flat form shape */
@@ -383,6 +417,8 @@ export default function ResearchPage() {
           onPin={() => togglePin(selected)}
           onEdit={() => setEditing(true)}
           onDelete={() => setConfirmDelete(true)}
+          onAddToFood={() => addToFood(selected)}
+          foodAdded={foodAdded}
           onClose={closeDetail}
         />
       )}

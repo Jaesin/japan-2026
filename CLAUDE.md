@@ -53,6 +53,30 @@ Project `japan-2026-6363d`: Firestore in `asia-southeast1`, Anonymous Auth enabl
 - **Deletes**: `firebase firestore:delete --project japan-2026-6363d --yes 'trips/japan-2026/collection/docId'`
 - **Writes/updates** that require member auth (e.g. `config/features`): use the REST API with the CLI token — the Firestore REST API respects the same security rules, and the CLI token is an owner-level credential that bypasses them.
 
+## MCP Server
+
+A local stdio MCP server (`mcp/trip-server.mjs`) for typed, validated Firestore writes. Register it in `.mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "japan-trip": {
+      "command": "node",
+      "args": ["mcp/trip-server.mjs"],
+      "env": { "JAPAN2026_AUTH_TOKEN": "${JAPAN2026_AUTH_TOKEN}" }
+    }
+  }
+}
+```
+
+**Available tools** (see `mcp/README.md` for full reference):
+- Read tools: `list_tasks`, `get_tasks`, `list_research`, `get_research`, etc. for all 14 collections.
+- Write tools: `upsert` (generic), `upsert_research`, `set_itinerary_day`, `add_task`, `add_budget_entry`, `upsert_accommodation`, `upsert_transport`, `add_checkin`, `move_itinerary_activity`, `export_all`.
+
+**Auth**: Set `JAPAN2026_AUTH_TOKEN` env var to the Firebase refresh token (from `~/.config/japan-2026/script-auth-token`). Falls back to the file if unset.
+
+**Important**: Prefer MCP tools over raw REST writes for any data mutation. Raw REST (CLAUDE.md §Firestore access from scripts / CLI) stays documented as the fallback but the MCP server validates every write against `src/data/schema.js` — the schema-drift guard.
+
 ## Not yet built
 
-Hermes write integrations. `specs/` holds the triage-ready feature specs (`specs/README.md` is the index); specs 00–04 and 10 are built.
+Specs 05–09, portal UI, and any feature beyond the public poster + MCP server. `specs/` holds the triage-ready feature specs (`specs/README.md` is the index); specs 00–04, 10, 40, and 41 are built.

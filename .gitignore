@@ -29,3 +29,9 @@ dist-ssr
 
 # Development process artifacts
 artifacts
+opencode.json
+.mcp.json
+specs
+scripts
+mcp
+tests

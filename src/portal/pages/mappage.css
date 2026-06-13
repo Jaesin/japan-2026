@@ -1,0 +1,148 @@
+/* mappage.css — Live Trip Map page (spec 24). The map dominates the viewport;
+   chrome (header, chips, day strip) sits above a tall map panel. Token vars
+   only (tokens.css); flat fills + hairlines like the rest of the portal. */
+
+.mappage {
+  display: flex;
+  flex-direction: column;
+  padding: var(--gutter);
+  padding-bottom: 0;
+  gap: 10px;
+}
+
+.mappage__head { line-height: 1; }
+.mappage__title {
+  font-size: 36px;
+  line-height: 0.9;
+  margin: 4px 0 0;
+  font-weight: 400;
+}
+
+/* ---- layer chips ----------------------------------------------------------- */
+.mappage__chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.mp-chip {
+  min-height: var(--tap);
+  padding: 8px 16px;
+  background: var(--chip-off-bg);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-pill);
+  color: var(--chip-off-text);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.mp-chip:active { background: var(--press-overlay); }
+.mp-chip--on {
+  background: var(--chip-sel-bg);
+  border-color: var(--chip-sel-bg);
+  color: var(--chip-sel-text);
+}
+.mp-chip--action {
+  border-style: dashed;
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* ---- day filter strip (mirrors itin-strip) --------------------------------- */
+.mappage__strip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin: 0 calc(var(--gutter) * -1);
+  padding: 2px var(--gutter) 4px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.mappage__strip::-webkit-scrollbar { display: none; }
+.mp-day {
+  flex: 0 0 auto;
+  min-width: 60px;
+  min-height: var(--tap);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 6px 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  color: var(--text);
+  font-family: var(--font-body);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.mp-day:active { background: var(--press-overlay); }
+.mp-day--on {
+  background: var(--chip-sel-bg);
+  border-color: var(--chip-sel-bg);
+  color: var(--chip-sel-text);
+}
+.mp-day__date { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.mp-day__city { font-size: 11px; opacity: 0.85; white-space: nowrap; }
+
+.mappage__err { color: var(--danger); }
+
+/* ---- map panel: takes the lion's share of the viewport --------------------- */
+.mappage__map {
+  position: relative;
+  min-height: 60vh;
+  height: calc(100dvh - 320px);
+  margin: 0 calc(var(--gutter) * -1);
+}
+
+/* ---- tapped-pin mini-card -------------------------------------------------- */
+.mp-card {
+  position: absolute;
+  left: var(--gutter);
+  right: var(--gutter);
+  bottom: calc(var(--gutter) + env(safe-area-inset-bottom));
+  z-index: 600;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  padding: 14px 40px 14px 16px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+}
+.mp-card__close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.mp-card__title { font-size: 16px; font-weight: 700; line-height: 1.2; }
+.mp-card__sub { font-size: 13px; color: var(--text-muted); margin-top: 3px; line-height: 1.4; }
+.mp-card__link {
+  margin-top: 10px;
+  min-height: 36px;
+  padding: 6px 0;
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (min-width: 768px) {
+  .mappage__map { height: calc(100dvh - 300px); }
+}

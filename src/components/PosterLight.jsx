@@ -1,14 +1,16 @@
 // PosterLight.jsx — Direction A "Rising Sun" (light mode).
 // V1b corner rising-sun hero → live "today" band → itinerary → map → dispatches.
 import { light as T } from '../theme';
-import { SAMPLE_CHECKINS, getTodayInfo } from '../tripData';
+import { SAMPLE_CHECKINS, getTodayInfo, relativeTime } from '../tripData';
 import { Sun, SunBurst, Fuji } from './motifs';
-import { Eyebrow, Credits, TodayBadge, FeedHeader, CheckinCard } from './pieces';
+import { Eyebrow, Credits, TodayBadge, FeedHeader, CheckinCard, EmptyDispatch, PostcardStrip } from './pieces';
 import RouteMap from './RouteMap';
+import { lastSeenFromCheckins } from './checkinUtils';
 
-export default function PosterLight() {
+export default function PosterLight({ checkins = SAMPLE_CHECKINS, postcards = [] }) {
   const info = getTodayInfo();
   const F = T.fonts;
+  const lastSeen = lastSeenFromCheckins(checkins);
   return (
     <div style={{ background: T.paper, color: T.ink, fontFamily: F.body }}>
       {/* ── Hero: V1b corner rising sun (rays clipped above the byline) ── */}
@@ -57,7 +59,7 @@ export default function PosterLight() {
       <div style={{ padding: '14px 30px 0' }}>
         <Eyebrow color={T.muted} style={{ marginBottom: 10 }}>The Route</Eyebrow>
         <div style={{ border: `1px solid ${T.line}` }}>
-          <RouteMap skin={T.map.skin} tiles={T.map.tiles} height={200} accent={T.accent} ink={T.ink} lastSeenIdx={1} label="Last seen · Hakone" />
+          <RouteMap skin={T.map.skin} tiles={T.map.tiles} height={200} accent={T.accent} ink={T.ink} lastSeenIdx={lastSeen.idx} label={lastSeen.label} />
         </div>
         <div style={{ fontSize: 10.5, color: T.muted, marginTop: 6 }}>Map © OpenStreetMap · CARTO</div>
       </div>
@@ -66,11 +68,23 @@ export default function PosterLight() {
       <div style={{ padding: '22px 30px 28px' }}>
         <FeedHeader ink={T.ink} accent={T.accent} muted={T.muted} font={F.body} displayFont={F.display} />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {SAMPLE_CHECKINS.slice(0, 2).map((c, i) => (
-            <CheckinCard key={i} {...c} accent={T.accent} ink={T.ink} paper={T.cardBg} muted={T.muted} font={F.body} displayFont={F.display} />
-          ))}
+          {checkins.length === 0 ? (
+            <EmptyDispatch accent={T.accent} ink={T.ink} paper={T.cardBg} muted={T.muted} font={F.body} displayFont={F.display} />
+          ) : (
+            checkins.slice(0, 2).map((c, i) => (
+              <CheckinCard key={c.id || i} {...c} when={c.when || relativeTime(c.at)} accent={T.accent} ink={T.ink} paper={T.cardBg} muted={T.muted} font={F.body} displayFont={F.display} />
+            ))
+          )}
         </div>
       </div>
+
+      {/* ── Postcards strip (spec 22) — additive; rendered only when present ── */}
+      {postcards.length > 0 && (
+        <PostcardStrip
+          postcards={postcards.map((p) => ({ ...p, when: p.when || relativeTime(p.at) }))}
+          accent={T.accent} ink={T.ink} paper={T.cardBg} muted={T.muted} line={T.line} font={F.body} displayFont={F.display}
+        />
+      )}
     </div>
   );
 }

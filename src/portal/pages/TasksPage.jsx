@@ -224,7 +224,11 @@ export default function TasksPage() {
   );
 
   const cycle = (t) => {
-    updateItem(['tasks', t.id], { status: NEXT_STATUS[t.status] || 'open' }).catch(console.error);
+    const next = NEXT_STATUS[t.status] || 'open';
+    const opts = next === 'done'
+      ? { activity: { verb: 'completed', title: t.title, link: '/portal/tasks' } }
+      : {};
+    updateItem(['tasks', t.id], { status: next }, opts).catch(console.error);
   };
 
   const addTask = (d) => {
@@ -237,7 +241,7 @@ export default function TasksPage() {
     };
     if (d.dueDate) data.dueDate = d.dueDate;
     if (d.notes.trim()) data.notes = d.notes.trim();
-    addItem(['tasks'], data).catch(console.error);
+    addItem(['tasks'], data, { activity: { verb: 'added', title: data.title, link: '/portal/tasks' } }).catch(console.error);
     setAdding(false);
   };
 
@@ -255,7 +259,7 @@ export default function TasksPage() {
   };
 
   const deleteTask = (t) => {
-    removeItem(['tasks', t.id]).catch(console.error);
+    removeItem(['tasks', t.id], { activity: { verb: 'removed', title: t.title, link: '/portal/tasks' } }).catch(console.error);
     setConfirming(null);
     setEditing(null);
   };

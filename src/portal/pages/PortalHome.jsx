@@ -5,9 +5,18 @@
 import { useNavigate } from 'react-router-dom';
 import { EmptyState } from '../ui/ui.jsx';
 import { TabIco } from '../ui/primitives.jsx';
+import { isEnabled } from '../../data/useFeatures.js';
+import TodayDashboard from './TodayDashboard.jsx';
 
-export default function PortalHome({ enabled = [], loading = false }) {
+export default function PortalHome({ enabled = [], features = {}, loading = false }) {
   const navigate = useNavigate();
+
+  // Spec 20: when the (hidden) `today` flag is on, the home page becomes the
+  // rich Today Dashboard. Otherwise keep the original feature-card grid.
+  if (isEnabled(features, 'today')) {
+    return <TodayDashboard enabled={enabled} />;
+  }
+
   return (
     <div style={{ padding: 'var(--gutter)' }}>
       <div className="eyebrow" style={{ color: 'var(--accent)' }}>Family headquarters</div>

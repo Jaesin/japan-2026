@@ -1,0 +1,184 @@
+/* today.css — Today Dashboard (spec 20). The /portal landing page. Extends
+   components.css conventions: flat fills, 1px hairlines, block__elem names,
+   tokens.css vars only. Touch targets ≥ var(--tap). */
+
+.today {
+  padding: var(--gutter);
+  padding-bottom: calc(var(--gutter) + 24px);
+}
+
+/* ---- header band ----------------------------------------------------------- */
+.today-head { margin-bottom: 18px; }
+.today-head__line {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px;
+  font-family: var(--font-body);
+}
+.today-head__day {
+  font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--accent);
+}
+.today-head__city { font-size: 22px; font-weight: 700; line-height: 1.1; }
+.today-head__date { font-size: 13px; color: var(--text-muted); }
+.today-head__sep { color: var(--text-muted); }
+
+/* ---- weather strip --------------------------------------------------------- */
+.today-weather {
+  margin-top: 6px; display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: var(--text-muted); font-variant-numeric: tabular-nums;
+}
+.today-weather__line { font-weight: 600; color: var(--text); }
+.today-weather__stale { font-size: 11px; opacity: 0.7; }
+
+/* ---- section scaffolding --------------------------------------------------- */
+.today-sec { margin: 18px 0; }
+.today-sec__head {
+  font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 8px;
+}
+.today-empty { font-size: 13px; color: var(--text-muted); }
+
+/* ---- generic tappable rows (transit, tasks, research) ---------------------- */
+.today-list { display: flex; flex-direction: column; gap: 8px; }
+.today-row {
+  display: flex; align-items: center; gap: 12px;
+  min-height: var(--tap); padding: 10px 12px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md);
+  color: var(--text); font-family: var(--font-body); cursor: pointer; text-align: left;
+  -webkit-tap-highlight-color: transparent;
+}
+.today-row:active { background: var(--press-overlay); }
+.today-row__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.today-row__title { font-size: 15px; font-weight: 600; line-height: 1.2; }
+.today-row__meta { font-size: 12px; color: var(--text-muted); }
+.today-row__cd {
+  flex: 0 0 auto; font-size: 12px; font-weight: 700; color: var(--accent);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.today-row__cd--past { color: var(--text-muted); font-weight: 600; }
+
+/* ---- today's plan ---------------------------------------------------------- */
+.today-plan { display: flex; flex-direction: column; gap: 6px; }
+.today-plan__row {
+  display: flex; align-items: center; gap: 10px;
+  min-height: var(--tap); padding: 8px 12px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md);
+  color: var(--text); font-family: var(--font-body); cursor: pointer; text-align: left;
+  -webkit-tap-highlight-color: transparent;
+}
+.today-plan__row:active { background: var(--press-overlay); }
+.today-plan__row--now { border-color: var(--accent); border-left-width: 3px; }
+.today-plan__row--next { border-color: var(--line-strong); }
+.today-plan__row--done .today-plan__title { text-decoration: line-through; color: var(--text-muted); }
+.today-plan__check {
+  flex: 0 0 auto; width: 22px; height: 22px; border-radius: 50%;
+  border: 2px solid var(--line-strong); background: transparent; cursor: pointer; padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.today-plan__check--on { background: var(--accent); border-color: var(--accent); }
+.today-plan__time {
+  flex: 0 0 auto; width: 42px; font-size: 13px; font-weight: 700;
+  font-variant-numeric: tabular-nums; color: var(--text-muted);
+}
+.today-plan__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.today-plan__title { font-size: 15px; font-weight: 600; line-height: 1.2; }
+.today-plan__loc { font-size: 12px; color: var(--text-muted); }
+.today-plan__tag {
+  flex: 0 0 auto; font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; padding: 2px 7px; border-radius: var(--r-pill);
+}
+.today-plan__tag--now { background: var(--accent); color: var(--on-accent); }
+.today-plan__tag--next { background: var(--surface-2); color: var(--text-muted); }
+
+/* ---- tonight (stay) -------------------------------------------------------- */
+.today-stay {
+  padding: 14px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: var(--r-md);
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+  font-family: var(--font-body);
+}
+.today-stay:active { background: var(--press-overlay); }
+.today-stay__name { font-size: 17px; font-weight: 700; line-height: 1.15; }
+.today-stay__meta { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
+.today-stay__access {
+  font-size: 13px; line-height: 1.4; margin-top: 8px;
+  padding: 8px 10px; background: var(--warning-bg); border-radius: var(--r-sm);
+}
+.today-stay__access-label {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--warning); margin-right: 4px;
+}
+.today-stay__acts { display: flex; gap: 8px; margin-top: 12px; }
+.today-stay__act {
+  flex: 1; min-height: var(--tap);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 600; font-family: var(--font-body);
+  border: 1px solid var(--line-strong); border-radius: var(--r-md);
+  background: var(--surface); color: var(--text); cursor: pointer; text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.today-stay__act:active { background: var(--press-overlay); }
+.today-stay__act:disabled { opacity: 0.45; cursor: default; }
+.today-stay__act--primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+
+/* ---- quick actions --------------------------------------------------------- */
+.today-actions { display: flex; gap: 10px; }
+.today-action {
+  flex: 1; min-height: 64px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--r-md);
+  color: var(--text); font-family: var(--font-body); cursor: pointer; position: relative;
+  -webkit-tap-highlight-color: transparent;
+}
+.today-action:active { background: var(--press-overlay); }
+.today-action__ico { font-size: 22px; line-height: 1; }
+.today-action__lab { font-size: 13px; font-weight: 600; }
+.today-action--soon { opacity: 0.55; cursor: default; }
+.today-action__soon {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* ---- today's spend chip ---------------------------------------------------- */
+.today-spend {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin-top: 18px; padding: 12px 14px;
+  background: var(--surface-2); border-radius: var(--r-md); font-family: var(--font-body);
+}
+.today-spend__label {
+  font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--text-muted);
+}
+.today-spend__amt { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.today-spend__thb { font-size: 14px; color: var(--text-muted); font-weight: 600; }
+
+/* ---- pre-trip countdown hero ----------------------------------------------- */
+.today-hero {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 24px 0 8px; text-align: center;
+}
+.today-hero__num {
+  font-family: var(--font-display); font-size: 88px; line-height: 0.85; color: var(--accent);
+  font-variant-numeric: tabular-nums; margin-top: 8px;
+}
+.today-hero__lab {
+  font-family: var(--font-display); font-size: 22px; letter-spacing: 0.04em; color: var(--text);
+}
+.today-hero__lab--done { font-size: 26px; margin-top: 8px; }
+
+/* ---- packing progress ------------------------------------------------------ */
+.today-pack {
+  padding: 12px 14px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: var(--r-md);
+  cursor: pointer; font-family: var(--font-body); -webkit-tap-highlight-color: transparent;
+}
+.today-pack:active { background: var(--press-overlay); }
+.today-pack__head {
+  display: flex; justify-content: space-between; font-size: 13px; font-weight: 600;
+  margin-bottom: 8px;
+}
+.today-pack__pct { color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.today-pack__track {
+  height: 8px; background: var(--surface-2); border-radius: var(--r-pill); overflow: hidden;
+}
+.today-pack__fill { height: 100%; background: var(--accent); border-radius: var(--r-pill); }
+.today-pack__fill--done { background: var(--success); }
