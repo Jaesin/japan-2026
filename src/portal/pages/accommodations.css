@@ -1,0 +1,141 @@
+/* accommodations.css — Accommodation manager page (spec 13). Extends
+   components.css conventions: flat fills, 1px hairlines, block__elem class
+   names, token vars only (tokens.css). */
+
+.accommodations {
+  padding: var(--gutter);
+  padding-bottom: calc(var(--gutter) + 80px); /* clear the FAB */
+}
+
+/* ---- gap banner -------------------------------------------------------------- */
+.stay-gap {
+  border-radius: var(--r-md);
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+.stay-gap--warn {
+  background: var(--warning-bg);
+  border: 1px solid var(--warning);
+  display: flex; flex-direction: column; gap: 4px;
+}
+.stay-gap__head { font-weight: 600; color: var(--warning); }
+.stay-gap__dates {
+  color: var(--text-muted); font-variant-numeric: tabular-nums;
+}
+.stay-gap--ok {
+  background: var(--success-bg); color: var(--success);
+  font-weight: 600; text-align: center;
+}
+
+/* ---- stay row — whole row opens the detail sheet ----------------------------- */
+.stay-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 0; min-height: var(--tap);
+  border-bottom: 1px solid var(--line);
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.stay-row:active { background: var(--press-overlay); }
+
+.stay-row__ico {
+  width: 28px; flex-shrink: 0; font-size: 20px; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+}
+.stay-row__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.stay-row__name {
+  font-weight: 600; font-size: 15px; line-height: 1.3;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.stay-row__meta {
+  font-size: 12px; color: var(--text-muted); line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* status pill */
+.stay-row__status {
+  flex-shrink: 0; padding: 3px 10px; border-radius: var(--r-pill);
+  font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.stay-row__status--booked { background: var(--success-bg); color: var(--success); }
+.stay-row__status--idea { background: var(--surface-2); color: var(--text-muted); }
+
+/* ---- detail sheet ------------------------------------------------------------ */
+/* two biggest touch targets: Copy address / Open in Maps */
+.stay-detail__big {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  margin-bottom: 16px;
+}
+.stay-detail__act {
+  min-height: 52px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 12px 14px; border-radius: var(--r-md);
+  background: var(--surface-2); border: 1px solid var(--line-strong);
+  color: var(--text); font-family: var(--font-body);
+  font-size: 14px; font-weight: 600; text-align: center;
+  cursor: pointer; text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.stay-detail__act:active { background: var(--press-overlay); }
+.stay-detail__act:disabled { opacity: 0.45; cursor: default; }
+.stay-detail__act--primary {
+  background: var(--accent); color: var(--on-accent); border-color: var(--accent);
+}
+
+/* access notes — prominent, the 9pm-arrival lifesaver */
+.stay-detail__access {
+  background: var(--surface-2); border: 1px dashed var(--accent);
+  border-radius: var(--r-md); padding: 12px 14px; margin-bottom: 16px;
+}
+.stay-detail__access-label { color: var(--accent); display: block; margin-bottom: 6px; }
+.stay-detail__access-body {
+  margin: 0; font-size: 16px; font-weight: 600; line-height: 1.4;
+  white-space: pre-wrap;
+}
+
+.stay-detail__address {
+  font-size: 14px; line-height: 1.45; color: var(--text-muted);
+  white-space: pre-wrap; margin-bottom: 12px;
+}
+
+.stay-detail__rows { display: flex; flex-direction: column; }
+.stay-detail__row {
+  display: flex; gap: 16px; padding: 10px 0;
+  border-bottom: 1px solid var(--line); font-size: 14px;
+}
+.stay-detail__label {
+  flex-shrink: 0; width: 88px; color: var(--text-muted);
+  font-size: 12px; padding-top: 1px;
+}
+.stay-detail__value { flex: 1; line-height: 1.4; white-space: pre-wrap; }
+
+.stay-detail__link {
+  display: inline-flex; align-items: center; min-height: var(--tap);
+  margin-top: 12px; color: var(--accent);
+  font-size: 14px; font-weight: 600; text-decoration: none;
+}
+
+.stay-detail__actions { display: flex; gap: 10px; margin-top: 18px; }
+
+/* ---- add / edit form --------------------------------------------------------- */
+.stay-form { display: grid; gap: 14px; padding-bottom: 8px; }
+.stay-form__pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* floating add button — sits above the tab bar */
+.accommodations-fab {
+  position: fixed;
+  bottom: calc(72px + env(safe-area-inset-bottom));
+  right: 20px;
+  width: 52px; height: 52px; border-radius: 50%;
+  background: var(--accent); color: var(--on-accent);
+  font-size: 24px; line-height: 1; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  z-index: 50;
+  -webkit-tap-highlight-color: transparent;
+}
+.accommodations-fab:active { background: var(--accent-press); }
+@media (min-width: 768px) {
+  .accommodations-fab { bottom: 24px; } /* sidebar layout — no tab bar to clear */
+}

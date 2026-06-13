@@ -19,6 +19,12 @@ import TasksPage from './pages/TasksPage.jsx';
 import PackingPage from './pages/PackingPage.jsx';
 import PhrasebookPage from './pages/PhrasebookPage.jsx';
 import TransportPage from './pages/TransportPage.jsx';
+import BudgetPage from './pages/BudgetPage.jsx';
+import AccommodationsPage from './pages/AccommodationsPage.jsx';
+import DocumentsPage from './pages/DocumentsPage.jsx';
+import JournalPage from './pages/JournalPage.jsx';
+import ResearchPage from './pages/ResearchPage.jsx';
+import ItineraryPage from './pages/ItineraryPage.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
 import './styles/tokens.css';
 import './styles/components.css';
@@ -141,6 +147,30 @@ export default function PortalShell() {
             <Route
               path="transport"
               element={isEnabled(features, 'transport') ? <TransportPage /> : <FeatureClosedPage loading={featuresLoading} />}
+            />
+            <Route
+              path="budget"
+              element={isEnabled(features, 'budget') ? <BudgetPage /> : <FeatureClosedPage loading={featuresLoading} />}
+            />
+            <Route
+              path="accommodations"
+              element={isEnabled(features, 'accommodations') ? <AccommodationsPage /> : <FeatureClosedPage loading={featuresLoading} />}
+            />
+            <Route
+              path="documents"
+              element={isEnabled(features, 'documents') ? <DocumentsPage /> : <FeatureClosedPage loading={featuresLoading} />}
+            />
+            <Route
+              path="journal"
+              element={isEnabled(features, 'journal') ? <JournalPage /> : <FeatureClosedPage loading={featuresLoading} />}
+            />
+            <Route
+              path="research"
+              element={isEnabled(features, 'research') ? <ResearchPage /> : <FeatureClosedPage loading={featuresLoading} />}
+            />
+            <Route
+              path="itinerary"
+              element={isEnabled(features, 'itinerary') ? <ItineraryPage /> : <FeatureClosedPage loading={featuresLoading} />}
             />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="*" element={<FeatureClosedPage loading={featuresLoading} />} />

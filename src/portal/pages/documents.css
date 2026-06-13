@@ -1,0 +1,133 @@
+/* documents.css — Document vault page (spec 17). Extends components.css
+   conventions: flat fills, 1px hairlines, block__elem class names, token
+   vars only (tokens.css). */
+
+.documents {
+  padding: var(--gutter);
+  padding-bottom: calc(var(--gutter) + 80px); /* clear the FAB */
+}
+
+/* category group */
+.doc-group { margin-top: 8px; }
+.doc-group__head {
+  padding: 20px 0 8px;
+  color: var(--text-muted);
+}
+
+/* document card */
+.doc-card {
+  margin-bottom: 12px; padding: 14px;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.doc-card:active { background: var(--press-overlay); }
+.doc-card__title { font-size: 15px; font-weight: 600; line-height: 1.3; }
+.doc-card .doc-fields { margin-top: 10px; }
+
+/* pinned emergencies card — not tappable, dashed accent border */
+.doc-card--emergency {
+  cursor: default; border-style: dashed; border-color: var(--accent);
+}
+.doc-card--emergency:active { background: var(--surface); }
+.doc-card--emergency .doc-card__title { color: var(--accent); }
+
+/* fields table — each value copyable */
+.doc-fields { display: flex; flex-direction: column; }
+.doc-field {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 8px 0; min-height: 36px;
+  border-bottom: 1px solid var(--line);
+}
+.doc-field:last-child { border-bottom: none; }
+.doc-field__label {
+  flex-shrink: 0; width: 96px; padding-top: 2px;
+  font-size: 12px; color: var(--text-muted); line-height: 1.3;
+}
+.doc-field__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.doc-field__value {
+  font-size: 14px; line-height: 1.35; word-break: break-word;
+  font-variant-numeric: tabular-nums;
+}
+.doc-field__value--link { color: var(--accent); text-decoration: none; }
+.doc-field__value--empty { color: var(--text-muted); }
+.doc-field__hint { font-size: 11px; color: var(--text-muted); line-height: 1.3; }
+
+.doc-field__copy {
+  flex-shrink: 0; align-self: flex-start;
+  min-height: 32px; padding: 4px 10px;
+  background: var(--surface-2); border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  color: var(--accent); font-family: var(--font-body);
+  font-size: 11px; font-weight: 600;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.doc-field__copy:active { background: var(--press-overlay); }
+
+/* tier-rule banner (passports) */
+.doc-banner {
+  margin: 0 0 14px; padding: 10px 12px;
+  background: var(--warning-bg); border: 1px solid var(--warning);
+  border-radius: var(--r-md);
+  font-size: 12px; line-height: 1.45; color: var(--text);
+}
+
+/* ---- detail sheet ---------------------------------------------------------- */
+.doc-detail__cat {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--text-muted);
+  margin-bottom: 12px;
+}
+.doc-detail__link {
+  display: inline-block; margin-top: 14px;
+  min-height: var(--tap); line-height: var(--tap);
+  color: var(--accent); font-weight: 600; font-size: 14px; text-decoration: none;
+}
+.doc-detail__notes {
+  margin: 14px 0 0; font-size: 13px; line-height: 1.5;
+  color: var(--text-muted); white-space: pre-wrap;
+}
+.doc-detail__actions { display: flex; gap: 10px; margin-top: 18px; }
+
+/* ---- add / edit form ------------------------------------------------------- */
+.doc-form { display: grid; gap: 14px; padding-bottom: 8px; }
+
+.doc-form__fields { display: grid; gap: 8px; }
+.doc-form__row {
+  display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: center;
+}
+.doc-form__rm {
+  width: var(--tap); height: var(--tap); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent; border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  color: var(--text-muted); font-size: 14px; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.doc-form__rm:active { background: var(--press-overlay); color: var(--danger); }
+.doc-form__add {
+  justify-self: start; min-height: var(--tap); padding: 6px 4px;
+  background: none; border: none;
+  color: var(--accent); font-family: var(--font-body);
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.doc-form__add:active { opacity: 0.7; }
+
+/* floating add button — sits above the tab bar */
+.documents-fab {
+  position: fixed;
+  bottom: calc(72px + env(safe-area-inset-bottom));
+  right: 20px;
+  width: 52px; height: 52px; border-radius: 50%;
+  background: var(--accent); color: var(--on-accent);
+  font-size: 24px; line-height: 1; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  z-index: 50;
+  -webkit-tap-highlight-color: transparent;
+}
+.documents-fab:active { background: var(--accent-press); }
+@media (min-width: 768px) {
+  .documents-fab { bottom: 24px; } /* sidebar layout — no tab bar to clear */
+}

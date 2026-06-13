@@ -1,0 +1,123 @@
+/* journal.css — Quick Journal page (spec 23). Extends components.css
+   conventions: flat fills, 1px hairlines, block__elem class names, token
+   vars only (tokens.css). */
+
+.journal {
+  padding: var(--gutter);
+  padding-bottom: calc(var(--gutter) + 80px); /* clear the FAB */
+}
+
+/* ---- day group ------------------------------------------------------------- */
+.journal-day { margin-bottom: 18px; }
+
+.journal-day__head {
+  display: flex; align-items: center; gap: 12px;
+  padding: 8px 0; min-height: var(--tap);
+  border-bottom: 1px solid var(--line-strong);
+}
+.journal-day__label { flex: 1; color: var(--text-muted); }
+
+.journal-day__add {
+  flex-shrink: 0; min-height: 32px; padding: 4px 12px;
+  background: none; border: 1px solid var(--line-strong);
+  border-radius: var(--r-pill);
+  color: var(--accent); font-family: var(--font-body);
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.journal-day__add:active { background: var(--press-overlay); }
+
+/* tap-to-add affordance on a day with no entries at all */
+.journal-day__empty {
+  width: 100%; min-height: var(--tap);
+  display: flex; align-items: center;
+  margin-top: 10px; padding: 12px 14px;
+  background: var(--surface-2); border: 1px dashed var(--line-strong);
+  border-radius: var(--r-md); cursor: pointer;
+  color: var(--text-muted); font-family: var(--font-body);
+  font-size: 13px; text-align: left;
+  -webkit-tap-highlight-color: transparent;
+}
+.journal-day__empty:active { background: var(--press-overlay); }
+
+.journal-day__entries { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+
+/* ---- single entry ---------------------------------------------------------- */
+.journal-entry {
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  display: flex; flex-direction: column; gap: 6px;
+  text-align: left; font-family: var(--font-body); color: var(--text);
+}
+.journal-entry--mine {
+  cursor: pointer; position: relative;
+  border-color: var(--line-strong);
+  -webkit-tap-highlight-color: transparent;
+}
+.journal-entry--mine:active { background: var(--press-overlay); }
+
+.journal-entry__head {
+  display: flex; align-items: center; gap: 10px;
+}
+.journal-entry__by {
+  flex: 1; min-width: 0;
+  font-size: 14px; font-weight: 600;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.journal-entry__you { color: var(--text-muted); font-weight: 400; }
+.journal-entry__highlight { font-size: 14px; line-height: 1.4; }
+.journal-entry__note {
+  font-size: 13px; line-height: 1.5; color: var(--text-muted);
+  white-space: pre-wrap;
+}
+.journal-entry__edit {
+  position: absolute; top: 10px; right: 12px;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.04em;
+  color: var(--accent);
+}
+
+/* ---- sun rating ------------------------------------------------------------ */
+.sun-rating { display: flex; align-items: center; gap: 8px; }
+.sun-rating__btn {
+  width: var(--tap); height: var(--tap);
+  display: flex; align-items: center; justify-content: center;
+  background: none; border: none; cursor: pointer; padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.sun-rating__btn:active { background: var(--press-overlay); border-radius: 50%; }
+/* read-only display row — compact, no touch targets */
+.sun-rating--ro { gap: 3px; flex-shrink: 0; }
+.sun-rating__pip { display: flex; }
+
+/* ---- form ------------------------------------------------------------------ */
+.journal-form { display: grid; gap: 14px; padding-bottom: 8px; }
+.journal-form__as {
+  font-size: 13px; color: var(--text-muted);
+  padding: 4px 0;
+}
+.journal-form__as b { color: var(--text); font-weight: 600; }
+
+/* ---- other-days header ----------------------------------------------------- */
+.journal__other-head {
+  margin: 24px 0 4px; color: var(--text-muted);
+}
+
+/* ---- floating add button — sits above the tab bar -------------------------- */
+.journal-fab {
+  position: fixed;
+  bottom: calc(72px + env(safe-area-inset-bottom));
+  right: 20px;
+  width: 52px; height: 52px; border-radius: 50%;
+  background: var(--accent); color: var(--on-accent);
+  font-size: 24px; line-height: 1; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  z-index: 50;
+  -webkit-tap-highlight-color: transparent;
+}
+.journal-fab:active { background: var(--accent-press); }
+@media (min-width: 768px) {
+  .journal-fab { bottom: 24px; } /* sidebar layout — no tab bar to clear */
+}

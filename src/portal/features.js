@@ -21,6 +21,12 @@ export const FEATURES = [
   { id: 'packing', label: 'Packing', ico: 'packing', path: '/portal/packing', group: 'planning', blurb: "Who's got what covered." },
   { id: 'phrases', label: 'Phrasebook', ico: 'docs', path: '/portal/phrases', group: 'trip', blurb: 'Phrases, show-cards, and Japan tips.' },
   { id: 'transport', label: 'Transport', ico: 'itinerary', path: '/portal/transport', group: 'planning', blurb: 'Every leg — flights, trains, transfers.' },
+  { id: 'budget', label: 'Budget', ico: 'budget', path: '/portal/budget', group: 'planning', blurb: 'Estimates and actual spend.' },
+  { id: 'accommodations', label: 'Stays', ico: 'bed', path: '/portal/accommodations', group: 'planning', blurb: "Tonight's bed, codes, and gaps." },
+  { id: 'documents', label: 'Docs', ico: 'docs', path: '/portal/documents', group: 'planning', blurb: 'Refs, contacts, and emergency numbers.' },
+  { id: 'journal', label: 'Journal', ico: 'journal', path: '/portal/journal', group: 'trip', blurb: 'A 60-second nightly entry.' },
+  { id: 'research', label: 'Research', ico: 'research', path: '/portal/research', group: 'planning', blurb: 'Shared shortlist of places and finds.' },
+  { id: 'itinerary', label: 'Itinerary', ico: 'itinerary', path: '/portal/itinerary', group: 'planning', blurb: 'The day-by-day plan.' },
 ];
 
 export const HOME_ITEM = { id: 'home', label: 'Home', ico: 'today', path: '/portal' };

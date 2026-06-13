@@ -1,0 +1,195 @@
+/* itinerary.css — Itinerary builder page (spec 12). Extends components.css
+   conventions: flat fills, 1px hairlines, block__elem class names, token
+   vars only (tokens.css). */
+
+.itinerary {
+  padding: var(--gutter);
+  padding-bottom: calc(var(--gutter) + 80px); /* clear the FAB */
+}
+
+/* ---- day strip ------------------------------------------------------------- */
+.itin-strip {
+  display: flex; gap: 8px; overflow-x: auto;
+  margin: 0 calc(var(--gutter) * -1) 16px; padding: 2px var(--gutter) 8px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.itin-strip::-webkit-scrollbar { display: none; }
+.itin-strip__day {
+  flex: 0 0 auto; min-width: 64px; min-height: var(--tap);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  padding: 8px 12px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md);
+  color: var(--text); font-family: var(--font-body); cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.itin-strip__day:active { background: var(--press-overlay); }
+.itin-strip__day--active {
+  background: var(--chip-sel-bg); border-color: var(--chip-sel-bg); color: var(--chip-sel-text);
+}
+.itin-strip__date { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.itin-strip__city { font-size: 11px; opacity: 0.85; white-space: nowrap; }
+
+/* ---- active day header ----------------------------------------------------- */
+.itin-dayhead { margin-bottom: 14px; }
+.itin-dayhead__top { display: flex; align-items: baseline; gap: 10px; }
+.itin-dayhead__num {
+  font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--accent);
+}
+.itin-dayhead__date { font-size: 12px; color: var(--text-muted); }
+.itin-dayhead__city { font-size: 22px; font-weight: 700; line-height: 1.1; margin-top: 2px; }
+.itin-dayhead__label { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+
+/* ---- controls (Map/List · Edit order) -------------------------------------- */
+.itin-controls { display: flex; gap: 8px; margin-bottom: 14px; }
+.itin-controls__btn {
+  min-height: 36px; padding: 6px 14px;
+  background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--r-pill);
+  color: var(--text); font-family: var(--font-body); font-size: 13px; font-weight: 600;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.itin-controls__btn:active { background: var(--press-overlay); }
+.itin-controls__btn:disabled { opacity: 0.4; cursor: default; }
+.itin-controls__btn--on {
+  background: var(--chip-sel-bg); border-color: var(--chip-sel-bg); color: var(--chip-sel-text);
+}
+
+/* ---- timeline -------------------------------------------------------------- */
+.itin-timeline { display: flex; flex-direction: column; }
+
+.itin-act {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 12px 0; min-height: var(--tap);
+  border-bottom: 1px solid var(--line);
+}
+.itin-act--done .itin-act__title { text-decoration: line-through; color: var(--text-muted); }
+
+.itin-act__time {
+  flex: 0 0 46px; padding-top: 2px;
+  font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums;
+  color: var(--text); text-align: right;
+}
+.itin-act--unscheduled .itin-act__time { color: var(--text-muted); font-weight: 400; font-size: 18px; }
+
+.itin-act__check {
+  flex: 0 0 22px; width: 22px; height: 22px; margin-top: 1px;
+  border: 1.5px solid var(--line-strong); border-radius: 50%;
+  background: transparent; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  position: relative;
+}
+.itin-act__check--on { background: var(--success); border-color: var(--success); }
+.itin-act__check--on::after {
+  content: ''; position: absolute; left: 6px; top: 2.5px;
+  width: 5px; height: 9px; border: solid var(--on-accent);
+  border-width: 0 2px 2px 0; transform: rotate(45deg);
+}
+
+.itin-act__main {
+  flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px;
+  background: none; border: none; padding: 0; text-align: left;
+  color: var(--text); font-family: var(--font-body); cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.itin-act__title { font-size: 15px; font-weight: 600; line-height: 1.3; }
+.itin-act__loc { font-size: 12px; color: var(--text-muted); }
+.itin-act__notes {
+  font-size: 12px; color: var(--text-muted); line-height: 1.4;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.itin-act__cost { font-size: 12px; font-weight: 600; color: var(--accent); margin-top: 2px; }
+
+.itin-act__chev {
+  flex: 0 0 8px; width: 8px; height: 8px; margin: 6px 4px 0 0;
+  border-right: 1.5px solid var(--text-muted); border-top: 1.5px solid var(--text-muted);
+  transform: rotate(45deg);
+}
+
+.itin-act__reorder { display: flex; flex-direction: column; gap: 2px; flex: 0 0 auto; }
+.itin-act__reorder button {
+  width: var(--tap); height: 22px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--r-sm);
+  color: var(--text); font-size: 11px; cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.itin-act__reorder button:active { background: var(--press-overlay); }
+.itin-act__reorder button:disabled { opacity: 0.3; cursor: default; }
+
+/* ---- per-day footer -------------------------------------------------------- */
+.itin-foot {
+  margin-top: 16px; padding: 12px 14px;
+  background: var(--surface-2); border-radius: var(--r-md);
+  font-size: 14px; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums;
+}
+
+/* ---- map ------------------------------------------------------------------- */
+.itin-map { border-radius: var(--r-md); }
+.itin-map-empty {
+  padding: 32px 16px; text-align: center;
+  color: var(--text-muted); font-size: 13px;
+  background: var(--surface-2); border-radius: var(--r-md);
+}
+.itin-pin {
+  width: 22px; height: 22px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: #C5302B; color: #fff; font-size: 12px; font-weight: 700;
+  font-family: 'Archivo', sans-serif;
+  box-shadow: 0 0 0 2.5px #f4ecd8, 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+
+/* ---- detail sheet ---------------------------------------------------------- */
+.itin-detail__rows { display: flex; flex-direction: column; }
+.itin-detail__row {
+  display: flex; gap: 16px; padding: 10px 0;
+  border-bottom: 1px solid var(--line); font-size: 14px;
+}
+.itin-detail__label {
+  flex-shrink: 0; width: 72px; color: var(--text-muted); font-size: 12px; padding-top: 1px;
+}
+.itin-detail__value { flex: 1; line-height: 1.4; white-space: pre-wrap; }
+.itin-detail__link {
+  display: inline-block; margin-top: 14px;
+  color: var(--accent); font-size: 14px; font-weight: 600; text-decoration: none;
+}
+.itin-detail__actions { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
+
+/* ---- move-to-day picker ---------------------------------------------------- */
+.itin-move { margin-top: 18px; display: flex; flex-direction: column; gap: 8px; }
+.itin-move__head { color: var(--text-muted); }
+.itin-move__opt {
+  display: flex; align-items: center; gap: 10px; min-height: var(--tap);
+  padding: 8px 14px; text-align: left;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md);
+  color: var(--text); font-family: var(--font-body); cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.itin-move__opt:active { background: var(--press-overlay); }
+.itin-move__opt:disabled { opacity: 0.5; cursor: default; }
+.itin-move__day { font-weight: 700; font-size: 14px; flex: 0 0 auto; }
+.itin-move__date { font-size: 13px; color: var(--text-muted); flex: 1; }
+.itin-move__here {
+  font-size: 11px; font-weight: 600; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+
+/* ---- add / edit form ------------------------------------------------------- */
+.itin-form { display: grid; gap: 14px; padding-bottom: 8px; }
+.itin-form__pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* ---- floating add button — copies .transport-fab --------------------------- */
+.itinerary-fab {
+  position: fixed;
+  bottom: calc(72px + env(safe-area-inset-bottom));
+  right: 20px;
+  width: 52px; height: 52px; border-radius: 50%;
+  background: var(--accent); color: var(--on-accent);
+  font-size: 24px; line-height: 1; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  z-index: 50;
+  -webkit-tap-highlight-color: transparent;
+}
+.itinerary-fab:active { background: var(--accent-press); }
+@media (min-width: 768px) {
+  .itinerary-fab { bottom: 24px; } /* sidebar layout — no tab bar to clear */
+}

@@ -1,0 +1,140 @@
+/* research.css — Research board page (spec 11). Extends components.css
+   conventions: flat fills, 1px hairlines, block__elem class names, token
+   vars only (tokens.css). */
+
+.research {
+  padding: var(--gutter);
+  padding-bottom: calc(var(--gutter) + 80px); /* clear the FAB */
+}
+
+/* horizontal scrolling chip rows (tabs + filters) */
+.research__tabs,
+.research__filters {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 10px;
+  margin: 0 calc(-1 * var(--gutter));
+  padding-left: var(--gutter);
+  padding-right: var(--gutter);
+}
+.research__tabs::-webkit-scrollbar,
+.research__filters::-webkit-scrollbar { display: none; }
+.research__tabs .chip,
+.research__filters .chip { flex-shrink: 0; }
+
+.research__tabs { border-bottom: 1px solid var(--line); margin-bottom: 12px; }
+
+/* card grid — single column on phones, two-up when wide */
+.research__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-top: 8px;
+}
+@media (min-width: 560px) {
+  .research__grid { grid-template-columns: 1fr 1fr; }
+}
+
+/* ---- card ------------------------------------------------------------------- */
+.research-card {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r-md); padding: 14px;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+  display: flex; flex-direction: column;
+}
+.research-card:active { background: var(--press-overlay); }
+.research-card--pinned { border-color: var(--accent); border-left-width: 4px; }
+
+.research-card__pinflag {
+  display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase; color: var(--accent); margin-bottom: 6px;
+}
+
+.research-card__head {
+  display: flex; align-items: flex-start; gap: 9px;
+}
+.research-card__cat { font-size: 18px; line-height: 1.2; flex-shrink: 0; }
+.research-card__title {
+  flex: 1; min-width: 0;
+  font-size: 15.5px; font-weight: 700; line-height: 1.25;
+}
+.research-card__note {
+  font-size: 13px; color: var(--text); opacity: .8; line-height: 1.4; margin-top: 6px;
+  display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.research-card__foot {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  margin-top: 12px;
+}
+.research-card__cattag { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+
+/* ---- star button (≥44px touch target) -------------------------------------- */
+.star-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: var(--tap); min-width: var(--tap); padding: 0 12px;
+  border: 1px solid var(--line-strong); border-radius: var(--r-pill);
+  background: transparent; color: var(--text);
+  font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums;
+  cursor: pointer; -webkit-tap-highlight-color: transparent; line-height: 1;
+}
+.star-btn:active { background: var(--press-overlay); }
+.star-btn--on { color: var(--accent); border-color: var(--accent); }
+.star-btn__glyph { font-size: 18px; line-height: 1; }
+.star-btn--big { min-height: 48px; padding: 0 16px; font-size: 15px; }
+.star-btn--big .star-btn__glyph { font-size: 22px; }
+
+/* ---- detail sheet ----------------------------------------------------------- */
+.research-detail__top {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+}
+.research-detail__spacer { flex: 1; }
+.research-detail__pinned {
+  font-size: 11px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase;
+  color: var(--accent);
+}
+
+.research-detail__link {
+  display: inline-flex; align-items: center;
+  min-height: var(--tap); margin-bottom: 8px;
+  color: var(--accent); font-weight: 700; font-size: 14px; text-decoration: none;
+}
+.research-detail__link:active { opacity: .7; }
+
+.research-detail__rows { display: flex; flex-direction: column; }
+.research-detail__row {
+  display: flex; gap: 16px; padding: 10px 0;
+  border-bottom: 1px solid var(--line); font-size: 14px;
+}
+.research-detail__label {
+  flex-shrink: 0; width: 76px; color: var(--text-muted);
+  font-size: 12px; padding-top: 1px;
+}
+.research-detail__value { flex: 1; line-height: 1.4; white-space: pre-wrap; }
+
+.research-detail__actions { display: flex; gap: 10px; margin-top: 18px; }
+
+/* ---- add / edit form -------------------------------------------------------- */
+.research-form { display: grid; gap: 14px; padding-bottom: 8px; }
+.research-form__pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* floating add button — sits above the tab bar (copy of .transport-fab) */
+.research-fab {
+  position: fixed;
+  bottom: calc(72px + env(safe-area-inset-bottom));
+  right: 20px;
+  width: 52px; height: 52px; border-radius: 50%;
+  background: var(--accent); color: var(--on-accent);
+  font-size: 24px; line-height: 1; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  z-index: 50;
+  -webkit-tap-highlight-color: transparent;
+}
+.research-fab:active { background: var(--accent-press); }
+@media (min-width: 768px) {
+  .research-fab { bottom: 24px; } /* sidebar layout — no tab bar to clear */
+}
