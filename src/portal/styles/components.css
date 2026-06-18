@@ -203,7 +203,7 @@
 
 /* ============================== BOTTOM SHEET ================================ */
 .scrim {
-  position: fixed; inset: 0; background: rgba(15,11,8,0.46);
+  position: fixed; inset: 0; height: 100dvh; background: rgba(15,11,8,0.46);
   display: flex; align-items: flex-end; z-index: 60; animation: scrim-in .18s ease;
 }
 @keyframes scrim-in { from { opacity: 0; } }
@@ -225,7 +225,7 @@
   color: var(--text-muted); font-size: 22px; line-height: 1; border-radius: var(--r-sm); }
 .sheet__close:active { background: var(--press-overlay); }
 .sheet__scroll { overflow-y: auto; padding: 16px var(--gutter); flex: 1; }
-.sheet__submit { padding: 12px var(--gutter); border-top: 1px solid var(--line); background: var(--bg); }
+.sheet__submit { padding: 12px var(--gutter) calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: var(--bg); }
 
 /* action sheet (More overflow) */
 .actionsheet { padding: 8px var(--gutter) calc(8px + env(safe-area-inset-bottom)); }
