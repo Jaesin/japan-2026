@@ -6,7 +6,9 @@
 
 import { useState } from 'react';
 import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { T10nProvider } from '@jaesin/t10n-client/react';
 import { TRIP_DAYS, getTodayInfo } from '../tripData.js';
+import { auth } from '../firebase.js';
 import { useMember } from '../auth/useMember.js';
 import { isEnabled, useFeatures } from '../data/useFeatures.js';
 import { FEATURES, HOME_ITEM, MORE_TAB, SETTINGS_ITEM } from './features.js';
@@ -93,6 +95,10 @@ function FeatureClosedPage({ loading = false }) {
   );
 }
 
+function getToken() {
+  return auth.currentUser ? auth.currentUser.getIdToken() : null;
+}
+
 export default function PortalShell() {
   const { status, loading: memberLoading } = useMember();
   const { features, loading: featuresLoading } = useFeatures();
@@ -130,6 +136,7 @@ export default function PortalShell() {
     : { phase: 'during', dayNum: TRIP_DAYS, city: 'Trip complete' };
 
   return (
+    <T10nProvider getToken={getToken}>
     <div className="portal shell">
       <Sidebar items={items} active={activeId} onNav={onNav} />
       <div className="shell__col">
@@ -217,5 +224,6 @@ export default function PortalShell() {
         />
       )}
     </div>
+    </T10nProvider>
   );
 }

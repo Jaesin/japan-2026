@@ -3,7 +3,8 @@
 // full-screen show-card, Web Speech API ja-JP playback, FAB + BottomSheet to
 // add custom phrases, inline delete per row.
 
-import { useState, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { useSpeaker } from '@jaesin/t10n-client/react';
 import { useCollection } from '../../data/useCollection.js';
 import { addItem, removeItem } from '../../data/mutate.js';
 import { isEnabled, useFeatures } from '../../data/useFeatures.js';
@@ -20,47 +21,141 @@ const CATEGORY_LABEL = {
   custom: 'My phrases',
 };
 
-/* ---- text-to-speech (Web Speech API) ---------------------------------------- */
+/* ---- text-to-speech (t10n-client: cloud TTS with web-speech fallback) -------- */
 function useTTS() {
-  const [speaking, setSpeaking] = useState(null); // phrase id currently speaking
-  const supported = typeof window !== 'undefined' && 'speechSynthesis' in window;
+  const { speak: speakerSpeak, cancel, speaking: anySpeaking, capabilities, engineFor, prefetch } = useSpeaker();
+  const [activeId, setActiveId] = useState(null);
+  const activeIdRef = useRef(null);
 
-  // voices load async on some browsers
-  const [, forceUpdate] = useState(0);
-  useEffect(() => {
-    if (!supported) return;
-    const handler = () => forceUpdate((n) => n + 1);
-    window.speechSynthesis.addEventListener('voiceschanged', handler);
-    return () => window.speechSynthesis.removeEventListener('voiceschanged', handler);
-  }, [supported]);
+  const supported = capabilities.cloud || capabilities.device;
 
   const speak = (id, text) => {
-    if (!supported) return;
-    window.speechSynthesis.cancel();
-    if (speaking === id) { setSpeaking(null); return; }
-    const utt = new SpeechSynthesisUtterance(text);
-    utt.lang = 'ja-JP';
-    utt.rate = 0.85;
-    const jaVoice = window.speechSynthesis.getVoices().find((v) => v.lang === 'ja-JP');
-    if (jaVoice) utt.voice = jaVoice;
-    utt.onend = () => setSpeaking(null);
-    utt.onerror = () => setSpeaking(null);
-    setSpeaking(id);
-    window.speechSynthesis.speak(utt);
+    if (activeIdRef.current === id) {
+      cancel();
+      setActiveId(null);
+      activeIdRef.current = null;
+      return;
+    }
+    activeIdRef.current = id;
+    setActiveId(id);
+    speakerSpeak(text, {
+      lang: 'ja',
+      onDone: () => {
+        if (activeIdRef.current === id) {
+          setActiveId(null);
+          activeIdRef.current = null;
+        }
+      },
+    });
   };
 
-  return { supported, speaking, speak };
+  const stop = () => {
+    if (activeIdRef.current === null) return;
+    cancel();
+    setActiveId(null);
+    activeIdRef.current = null;
+  };
+
+  // Clear if the speaker stops externally (e.g. browser navigates away).
+  useEffect(() => {
+    if (!anySpeaking && activeIdRef.current !== null) {
+      setActiveId(null);
+      activeIdRef.current = null;
+    }
+  }, [anySpeaking]);
+
+  return { supported, speaking: activeId, speak, stop, engineFor, prefetch, capabilities };
+}
+
+/* Warm the cloud TTS clip for a phrase once its row scrolls into view, so a
+   later tap plays cloud audio (and the engine ring flips dashed → solid).
+   Returns a ref-callback to attach to each row element. */
+function useVisiblePrefetch(prefetch, enabled) {
+  const observerRef = useRef(null);
+  const targetsRef = useRef(new Map()); // el → japanese text
+
+  useEffect(() => {
+    if (!enabled || typeof IntersectionObserver === 'undefined') return undefined;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        const items = [];
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          const text = targetsRef.current.get(entry.target);
+          if (text) items.push({ text, lang: 'ja' });
+          obs.unobserve(entry.target);
+          targetsRef.current.delete(entry.target);
+        }
+        if (items.length) void prefetch(items); // warm() skips already-cached clips
+      },
+      { rootMargin: '200px' }, // start a little before the row is on-screen
+    );
+    observerRef.current = obs;
+    for (const el of targetsRef.current.keys()) obs.observe(el);
+    return () => { obs.disconnect(); observerRef.current = null; };
+  }, [prefetch, enabled]);
+
+  return (text) => (el) => {
+    if (!el || !text) return;
+    targetsRef.current.set(el, text);
+    observerRef.current?.observe(el);
+  };
 }
 
 function SpeakerIcon({ active }) {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
       stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill={active ? 'currentColor' : 'none'} />
-      {active
-        ? <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
-        : <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />}
+      {/* The glyph is left-weighted in its viewBox (cone left, waves right), so
+         nudge it right to optically center it inside the EngineRing. */}
+      <g transform="translate(2.5 0)">
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill={active ? 'currentColor' : 'none'} />
+        {active
+          ? <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
+          : <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />}
+      </g>
     </svg>
+  );
+}
+
+/* Animated waveform shown while a clip is playing. */
+function Waveform() {
+  return (
+    <span className="waveform" aria-hidden="true">
+      <span /><span /><span /><span />
+    </span>
+  );
+}
+
+/* Ring around the speaker icon, drawn as SVG so the dash length is exact.
+   Solid → cloud clip ready; dashed → device (web-speech) fallback. */
+function EngineRing({ engine }) {
+  if (engine !== 'cloud' && engine !== 'device') return null;
+  return (
+    <svg className="speak-btn__ring" viewBox="0 0 36 36" aria-hidden="true">
+      <circle cx="18" cy="18" r="16" fill="none"
+        stroke="currentColor" strokeWidth="1.5"
+        strokeDasharray={engine === 'device' ? '6 4' : undefined} />
+    </svg>
+  );
+}
+
+/* Speaker button. The ring reports which engine a tap will use *now*:
+   - solid circle  → cloud TTS clip is ready (cached)
+   - dashed circle → will fall back to device (web-speech)
+   While playing, the icon swaps to an animated waveform. */
+function SpeakButton({ id, text, speaking, speak, engineFor }) {
+  const engine = engineFor(text, { lang: 'ja' }); // 'cloud' | 'device' | null
+  const isPlaying = speaking === id;
+  return (
+    <button
+      className="speak-btn"
+      onClick={(e) => { e.stopPropagation(); speak(id, text); }}
+      aria-label={isPlaying ? 'Stop' : 'Speak Japanese'}
+    >
+      <EngineRing engine={engine} />
+      {isPlaying ? <Waveform /> : <SpeakerIcon active={false} />}
+    </button>
   );
 }
 
@@ -132,7 +227,8 @@ export default function PhrasebookPage() {
   const [expanded, setExpanded] = useState(() => new Set(['show-card']));
   const [selected, setSelected] = useState(null); // phrase shown full-screen
   const [addOpen, setAddOpen] = useState(false);
-  const { supported, speaking, speak } = useTTS();
+  const { supported, speaking, speak, stop, engineFor, prefetch, capabilities } = useTTS();
+  const rowRef = useVisiblePrefetch(prefetch, supported && capabilities.cloud);
 
   /* Feature gate — wait on the flags doc, never render a broken page. */
   if (featuresLoading) {
@@ -161,6 +257,12 @@ export default function PhrasebookPage() {
 
   const remove = (id) => {
     removeItem(['phrases', id]).catch(console.error);
+  };
+
+  // Closing the show-card should also stop any in-progress playback.
+  const closeShowcard = () => {
+    stop();
+    setSelected(null);
   };
 
   const byCategory = (cat) => docs
@@ -200,6 +302,7 @@ export default function PhrasebookPage() {
             {open && phrases.map((phrase) => (
               <div
                 key={phrase.id}
+                ref={rowRef(phrase.japanese)}
                 className="phrase-row"
                 role="button"
                 tabIndex={0}
@@ -212,13 +315,7 @@ export default function PhrasebookPage() {
                   <div className="phrase-row__en">{phrase.english}</div>
                 </div>
                 {supported && phrase.japanese && (
-                  <button
-                    className={`speak-btn${speaking === phrase.id ? ' speak-btn--active' : ''}`}
-                    onClick={(e) => { e.stopPropagation(); speak(phrase.id, phrase.japanese); }}
-                    aria-label="Speak Japanese"
-                  >
-                    <SpeakerIcon active={speaking === phrase.id} />
-                  </button>
+                  <SpeakButton id={phrase.id} text={phrase.japanese} speaking={speaking} speak={speak} engineFor={engineFor} />
                 )}
                 <button
                   className="phrase-row__del"
@@ -238,19 +335,16 @@ export default function PhrasebookPage() {
       {addOpen && <AddSheet onClose={() => setAddOpen(false)} />}
 
       {selected && (
-        <div className="showcard" onClick={() => setSelected(null)}>
+        <div className="showcard" onClick={closeShowcard}>
           <div className="showcard__inner" onClick={(e) => e.stopPropagation()}>
             <div className="showcard__jp">{selected.japanese || selected.english}</div>
             {selected.romaji && <div className="showcard__romaji">{selected.romaji}</div>}
             <div className="showcard__en">{selected.english}</div>
             <div className="showcard__actions">
               {supported && selected.japanese && (
-                <button className={`speak-btn${speaking === selected.id ? ' speak-btn--active' : ''}`}
-                  onClick={() => speak(selected.id, selected.japanese)} aria-label="Speak">
-                  <SpeakerIcon active={speaking === selected.id} />
-                </button>
+                <SpeakButton id={selected.id} text={selected.japanese} speaking={speaking} speak={speak} engineFor={engineFor} />
               )}
-              <Button variant="secondary" onClick={() => setSelected(null)}>Close</Button>
+              <Button variant="secondary" onClick={closeShowcard}>Close</Button>
             </div>
           </div>
         </div>

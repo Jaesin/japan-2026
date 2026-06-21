@@ -12,6 +12,7 @@
     "test:bdd:headed": "bddgen && playwright test --config tests/bdd/playwright.config.js --headed"
   },
   "dependencies": {
+    "@jaesin/t10n-client": "github:Jaesin/t10n-client",
     "firebase": "^12.14.0",
     "leaflet": "^1.9.4",
     "react": "^19.2.7",
