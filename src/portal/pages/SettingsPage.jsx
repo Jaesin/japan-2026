@@ -3,10 +3,12 @@
 // name, each expanding to its registered devices (revoke / add device), plus
 // an "Invite someone" CTA. Always reachable for members — never behind a flag.
 
-import { Fragment, useState } from 'react';
-import { Button, EmptyState, Field, Input } from '../ui/ui.jsx';
+import { Fragment, useEffect, useRef, useState } from 'react';
+import { useT10nClient } from '@jaesin/t10n-client/react';
+import { Button, EmptyState, Field, Input, Select } from '../ui/ui.jsx';
 import { BottomSheet, ConfirmDialog } from '../ui/overlays.jsx';
 import { FEATURES, FEATURE_GROUPS } from '../features.js';
+import { JA_VOICES, SAMPLE_PHRASE, useVoice } from '../voice.js';
 import { useFeatures } from '../../data/useFeatures.js';
 import { useCollection } from '../../data/useCollection.js';
 import { removeItem, setItem, updateItem } from '../../data/mutate.js';
@@ -154,6 +156,87 @@ function FeaturesSection({ onToast }) {
         {!loading && keys.length === 0 && (
           <EmptyState line="No switches yet — features appear here as they're developed, off until flipped on." />
         )}
+      </div>
+    </section>
+  );
+}
+
+/* ---- Voice section ----------------------------------------------------------- */
+
+// Japanese TTS voice picker for the Phrasebook. Per-device preference (see
+// ../voice.js). The preview plays the *cloud* clip for the selected Azure voice
+// directly — never the web-speech fallback, which can't honor the voice id and
+// would give a misleading sample.
+function VoiceSection({ onToast }) {
+  const [voice, setVoice] = useVoice();
+  const client = useT10nClient();
+  const audioRef = useRef(null);
+  const reqRef = useRef(0); // guards against an out-of-order / superseded fetch
+  const [busy, setBusy] = useState(false);
+  const [playing, setPlaying] = useState(false);
+
+  const stop = () => {
+    reqRef.current += 1; // cancel any in-flight fetch
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    setPlaying(false);
+    setBusy(false);
+  };
+
+  // Stop playback if the user navigates away mid-preview (refs only — no
+  // state updates on an unmounted component).
+  useEffect(() => () => {
+    reqRef.current += 1;
+    audioRef.current?.pause();
+    audioRef.current = null;
+  }, []);
+
+  const preview = async () => {
+    if (busy || playing) { stop(); return; }
+    const req = (reqRef.current += 1);
+    setBusy(true);
+    try {
+      const { audio } = await client.fetchSpeech({ text: SAMPLE_PHRASE, voice });
+      if (req !== reqRef.current) return; // superseded by a newer tap / stop
+      const el = new Audio(`data:audio/${audio.format || 'mp3'};base64,${audio.base64}`);
+      audioRef.current = el;
+      el.addEventListener('ended', () => { if (req === reqRef.current) stop(); }, { once: true });
+      el.addEventListener('error', () => { if (req === reqRef.current) stop(); }, { once: true });
+      setBusy(false);
+      setPlaying(true);
+      await el.play();
+    } catch {
+      if (req === reqRef.current) {
+        stop();
+        onToast('Couldn’t play a preview — check your connection');
+      }
+    }
+  };
+
+  return (
+    <section className="settings__section">
+      <SectionHead label="Voice" />
+      <div className="settings__list">
+        <div className="row row--static">
+          <span className="row__main">
+            <div className="row__title">Japanese playback voice</div>
+            <div className="row__meta">Used when you tap the speaker in the phrasebook. Saved on this device.</div>
+          </span>
+        </div>
+        <div className="row row--static" style={{ gap: 10 }}>
+          <span className="row__main">
+            <Select value={voice} onChange={(e) => { stop(); setVoice(e.target.value); }} aria-label="Japanese voice">
+              {JA_VOICES.map((v) => (
+                <option key={v.id} value={v.id}>{v.label} — {v.blurb}</option>
+              ))}
+            </Select>
+          </span>
+          <Button size="sm" variant="secondary" disabled={busy} onClick={preview}>
+            {playing ? 'Stop' : busy ? '…' : 'Preview'}
+          </Button>
+        </div>
       </div>
     </section>
   );
@@ -371,6 +454,7 @@ export default function SettingsPage() {
       <h1 className="disp" style={{ fontSize: 40, lineHeight: 0.9, margin: '6px 0 0', fontWeight: 400 }}>SETTINGS</h1>
 
       <FeaturesSection onToast={showToast} />
+      <VoiceSection onToast={showToast} />
       <MembersSection invites={invites} onToast={showToast} />
 
       {toast && <div className="toast">{toast}</div>}

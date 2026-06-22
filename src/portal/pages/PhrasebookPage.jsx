@@ -8,6 +8,7 @@ import { useSpeaker } from '@jaesin/t10n-client/react';
 import { useCollection } from '../../data/useCollection.js';
 import { addItem, removeItem } from '../../data/mutate.js';
 import { isEnabled, useFeatures } from '../../data/useFeatures.js';
+import { useVoice } from '../voice.js';
 import { Button, EmptyState, Field, Input, Select } from '../ui/ui.jsx';
 import { BottomSheet } from '../ui/overlays.jsx';
 import './phrasebook.css';
@@ -22,7 +23,7 @@ const CATEGORY_LABEL = {
 };
 
 /* ---- text-to-speech (t10n-client: cloud TTS with web-speech fallback) -------- */
-function useTTS() {
+function useTTS(voice) {
   const { speak: speakerSpeak, cancel, speaking: anySpeaking, capabilities, engineFor, prefetch } = useSpeaker();
   const [activeId, setActiveId] = useState(null);
   const activeIdRef = useRef(null);
@@ -40,6 +41,7 @@ function useTTS() {
     setActiveId(id);
     speakerSpeak(text, {
       lang: 'ja',
+      voice,
       onDone: () => {
         if (activeIdRef.current === id) {
           setActiveId(null);
@@ -70,7 +72,7 @@ function useTTS() {
 /* Warm the cloud TTS clip for a phrase once its row scrolls into view, so a
    later tap plays cloud audio (and the engine ring flips dashed → solid).
    Returns a ref-callback to attach to each row element. */
-function useVisiblePrefetch(prefetch, enabled) {
+function useVisiblePrefetch(prefetch, enabled, voice) {
   const observerRef = useRef(null);
   const targetsRef = useRef(new Map()); // el → japanese text
 
@@ -82,7 +84,7 @@ function useVisiblePrefetch(prefetch, enabled) {
         for (const entry of entries) {
           if (!entry.isIntersecting) continue;
           const text = targetsRef.current.get(entry.target);
-          if (text) items.push({ text, lang: 'ja' });
+          if (text) items.push({ text, lang: 'ja', voice });
           obs.unobserve(entry.target);
           targetsRef.current.delete(entry.target);
         }
@@ -93,7 +95,8 @@ function useVisiblePrefetch(prefetch, enabled) {
     observerRef.current = obs;
     for (const el of targetsRef.current.keys()) obs.observe(el);
     return () => { obs.disconnect(); observerRef.current = null; };
-  }, [prefetch, enabled]);
+    // Re-arm on voice change so rows scrolled past warm the newly-selected voice.
+  }, [prefetch, enabled, voice]);
 
   return (text) => (el) => {
     if (!el || !text) return;
@@ -144,8 +147,8 @@ function EngineRing({ engine }) {
    - solid circle  → cloud TTS clip is ready (cached)
    - dashed circle → will fall back to device (web-speech)
    While playing, the icon swaps to an animated waveform. */
-function SpeakButton({ id, text, speaking, speak, engineFor }) {
-  const engine = engineFor(text, { lang: 'ja' }); // 'cloud' | 'device' | null
+function SpeakButton({ id, text, speaking, speak, engineFor, voice }) {
+  const engine = engineFor(text, { lang: 'ja', voice }); // 'cloud' | 'device' | null
   const isPlaying = speaking === id;
   return (
     <button
@@ -227,8 +230,9 @@ export default function PhrasebookPage() {
   const [expanded, setExpanded] = useState(() => new Set(['show-card']));
   const [selected, setSelected] = useState(null); // phrase shown full-screen
   const [addOpen, setAddOpen] = useState(false);
-  const { supported, speaking, speak, stop, engineFor, prefetch, capabilities } = useTTS();
-  const rowRef = useVisiblePrefetch(prefetch, supported && capabilities.cloud);
+  const [voice] = useVoice();
+  const { supported, speaking, speak, stop, engineFor, prefetch, capabilities } = useTTS(voice);
+  const rowRef = useVisiblePrefetch(prefetch, supported && capabilities.cloud, voice);
 
   /* Feature gate — wait on the flags doc, never render a broken page. */
   if (featuresLoading) {
@@ -315,7 +319,7 @@ export default function PhrasebookPage() {
                   <div className="phrase-row__en">{phrase.english}</div>
                 </div>
                 {supported && phrase.japanese && (
-                  <SpeakButton id={phrase.id} text={phrase.japanese} speaking={speaking} speak={speak} engineFor={engineFor} />
+                  <SpeakButton id={phrase.id} text={phrase.japanese} speaking={speaking} speak={speak} engineFor={engineFor} voice={voice} />
                 )}
                 <button
                   className="phrase-row__del"
@@ -342,7 +346,7 @@ export default function PhrasebookPage() {
             <div className="showcard__en">{selected.english}</div>
             <div className="showcard__actions">
               {supported && selected.japanese && (
-                <SpeakButton id={selected.id} text={selected.japanese} speaking={speaking} speak={speak} engineFor={engineFor} />
+                <SpeakButton id={selected.id} text={selected.japanese} speaking={speaking} speak={speak} engineFor={engineFor} voice={voice} />
               )}
               <Button variant="secondary" onClick={closeShowcard}>Close</Button>
             </div>
