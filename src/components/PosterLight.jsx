@@ -48,9 +48,9 @@ export default function PosterLight({ checkins = SAMPLE_CHECKINS, postcards = []
       <div style={{ padding: '24px 30px 6px' }}>
         <Eyebrow color={T.muted} style={{ marginBottom: 10 }}>The Itinerary</Eyebrow>
         <Credits font={F.body} displayFont={F.display} label={T.muted} value={T.ink} line={T.line} rows={[
-          ['Featuring', 'Tokyo · Hakone · Kyoto · Nara · Osaka', true],
-          ['Runtime', '10 days across Honshū'],
-          ['Premieres', 'July 4, 2026'],
+          ['Featuring', 'Osaka · Nara · Kyoto · Tokyo', true],
+          ['Runtime', '11 days across Honshū'],
+          ['Premieres', 'July 3, 2026'],
           ['Status', 'Route still being charted'],
         ]} />
       </div>

@@ -71,7 +71,7 @@ export function FeedHeader({ ink, accent, muted, font, displayFont }) {
         <span style={{ width: 8, height: 8, borderRadius: '50%', background: accent, boxShadow: `0 0 0 3px ${accent}33` }} />
         <span style={{ fontFamily: displayFont, fontSize: 22, color: ink, letterSpacing: 0.5 }}>Dispatches</span>
       </div>
-      <span style={{ fontSize: 10, letterSpacing: 1.5, color: muted, fontWeight: 700, textTransform: 'uppercase' }}>Live July 4</span>
+      <span style={{ fontSize: 10, letterSpacing: 1.5, color: muted, fontWeight: 700, textTransform: 'uppercase' }}>Live July 3</span>
     </div>
   );
 }
@@ -88,7 +88,7 @@ export function EmptyDispatch({ accent, ink, paper, muted, font, displayFont }) 
     }}>
       <Sun size={26} color={accent} style={{ marginTop: 0, opacity: 0.5 }} />
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontFamily: displayFont, fontSize: 18, color: ink, letterSpacing: 0.3 }}>Dispatches begin July 4</div>
+        <div style={{ fontFamily: displayFont, fontSize: 18, color: ink, letterSpacing: 0.3 }}>Dispatches begin July 3</div>
         <div style={{ fontSize: 12.5, color: ink, opacity: 0.78, lineHeight: 1.45, marginTop: 3 }}>The first postcard lands when the family does.</div>
       </div>
     </div>

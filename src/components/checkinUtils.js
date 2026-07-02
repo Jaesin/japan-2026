@@ -5,12 +5,12 @@
 // (it never took an arbitrary lat/lng). To keep that contract unchanged while
 // binding the pin to the newest real check-in, we snap the check-in's `ll` to
 // the nearest ROUTE stop and pass that index along with a live "Last seen ·
-// {place}" label. With no check-ins we return the poster's original default
-// (idx 1, "Last seen · Hakone") so the design is pixel-identical pre-trip.
+// {place}" label. With no check-ins we return the trip's starting stop.
 
 import { ROUTE } from '../tripData';
 
-const DEFAULT = { idx: 1, label: 'Last seen · Hakone' };
+const DEFAULT_IDX = ROUTE.findIndex((r) => r.city === 'Osaka');
+const DEFAULT = { idx: DEFAULT_IDX, label: `Last seen · ${ROUTE[DEFAULT_IDX].city}` };
 
 /** nearest ROUTE index to [lat,lng] by squared euclidean distance (good enough
  *  for snapping a city-scale pin); null ll → null. */

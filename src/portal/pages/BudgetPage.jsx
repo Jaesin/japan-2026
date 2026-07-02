@@ -1,14 +1,15 @@
 // BudgetPage — budget ledger (spec 14). One Firestore collection
 // budget/{autoId} holds both pre-trip estimates and during-trip actuals;
 // the summary header compares them per category. Amounts are canonical in
-// JPY; THB display derives from config/main.fxRate (THB per ¥100).
+// JPY; USD display derives from the live rate (fx.js) or, for entries that
+// stamped their own `fxRate` at entry time, that historical rate.
 
 import { useState, useMemo } from 'react';
 import { useCollection } from '../../data/useCollection.js';
-import { useDoc } from '../../data/useDoc.js';
 import { addItem, removeItem, updateItem } from '../../data/mutate.js';
 import { isEnabled, useFeatures } from '../../data/useFeatures.js';
 import { useMember } from '../../auth/useMember.js';
+import { useFxRate } from '../fx.js';
 import { Button, EmptyState, Field, FilterChip, Input, Textarea } from '../ui/ui.jsx';
 import { BottomSheet, ConfirmDialog } from '../ui/overlays.jsx';
 import './budget.css';
@@ -17,20 +18,20 @@ const CATEGORIES = ['flights', 'stay', 'transport', 'food', 'activities', 'shopp
 const CAT_LABELS = { flights: 'Flights', stay: 'Stay', transport: 'Transport', food: 'Food', activities: 'Activities', shopping: 'Shopping', other: 'Other' };
 const CAT_ICO = { flights: '✈️', stay: '🛏', transport: '🚄', food: '🍜', activities: '⛩', shopping: '🛍', other: '📦' };
 
-const FALLBACK_FX = 23; // THB per ¥100 when config/main is unavailable
-
 /* ---- FX / formatting helpers ----------------------------------------------- */
-function toTHB(entry, fxRate) {
-  if (entry.amountTHB) return entry.amountTHB;
-  if (entry.amountJPY) return (entry.amountJPY * fxRate) / 100;
+// Prefer the rate stamped on the entry itself (the rate at time of payment)
+// over the live rate, so historical entries don't drift as the live rate moves.
+function toUSD(entry, liveRate) {
+  if (entry.amountUSD != null) return entry.amountUSD;
+  if (entry.amountJPY != null) return entry.amountJPY / (entry.fxRate || liveRate);
   return 0;
 }
-function toJPY(entry, fxRate) {
-  if (entry.amountJPY) return entry.amountJPY;
-  if (entry.amountTHB) return (entry.amountTHB * 100) / fxRate;
+function toJPY(entry, liveRate) {
+  if (entry.amountJPY != null) return entry.amountJPY;
+  if (entry.amountUSD != null) return entry.amountUSD * (entry.fxRate || liveRate);
   return 0;
 }
-function fmtTHB(n) { return '฿' + Math.round(n).toLocaleString(); }
+function fmtUSD(n) { return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 function fmtJPY(n) { return '¥' + Math.round(n).toLocaleString(); }
 
 /* "2026-07-04" → "Sat Jul 4" (local-safe: parse parts, avoid UTC shift) */
@@ -53,10 +54,10 @@ function entryToForm(entry, memberName) {
       kind: 'actual', date: todayISO(), paidBy: memberName || '', notes: '',
     };
   }
-  const isTHB = entry.amountJPY == null && entry.amountTHB != null;
+  const isUSD = entry.amountJPY == null && entry.amountUSD != null;
   return {
-    amount: String(isTHB ? entry.amountTHB : entry.amountJPY ?? ''),
-    currency: isTHB ? 'THB' : 'JPY',
+    amount: String(isUSD ? entry.amountUSD : entry.amountJPY ?? ''),
+    currency: isUSD ? 'USD' : 'JPY',
     category: entry.category || '',
     item: entry.item || '',
     kind: entry.kind || 'actual',
@@ -66,15 +67,23 @@ function entryToForm(entry, memberName) {
   };
 }
 
-function formToEntry(form) {
+// Stamps BOTH amountJPY and amountUSD, plus the fxRate used, so the entry
+// stays accurate at its original value even as the live rate moves later.
+function formToEntry(form, fxRate) {
   const entry = {
     category: form.category,
     kind: form.kind,
     paidBy: form.paidBy.trim(),
+    fxRate,
   };
   const amount = Number(form.amount);
-  if (form.currency === 'THB') entry.amountTHB = amount;
-  else entry.amountJPY = amount;
+  if (form.currency === 'USD') {
+    entry.amountUSD = amount;
+    entry.amountJPY = Math.round(amount * fxRate);
+  } else {
+    entry.amountJPY = amount;
+    entry.amountUSD = Math.round((amount / fxRate) * 100) / 100;
+  }
   const item = form.item.trim();
   if (item) entry.item = item;
   if (form.kind === 'actual' && form.date) entry.date = form.date;
@@ -83,7 +92,7 @@ function formToEntry(form) {
   return entry;
 }
 
-function BudgetForm({ initial, onSubmit, submitLabel }) {
+function BudgetForm({ initial, fxRate, onSubmit, submitLabel }) {
   const [form, setForm] = useState(initial);
   const [notesOpen, setNotesOpen] = useState(!!initial.notes);
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -96,7 +105,7 @@ function BudgetForm({ initial, onSubmit, submitLabel }) {
   return (
     <form
       className="budget-form"
-      onSubmit={(e) => { e.preventDefault(); if (valid) onSubmit(formToEntry(form)); }}
+      onSubmit={(e) => { e.preventDefault(); if (valid) onSubmit(formToEntry(form, fxRate)); }}
     >
       <input
         className="budget__amount-input"
@@ -112,7 +121,7 @@ function BudgetForm({ initial, onSubmit, submitLabel }) {
       />
       <div className="budget-form__chips" role="group" aria-label="Currency">
         <FilterChip selected={form.currency === 'JPY'} onClick={() => setVal('currency', 'JPY')}>¥ JPY</FilterChip>
-        <FilterChip selected={form.currency === 'THB'} onClick={() => setVal('currency', 'THB')}>฿ THB</FilterChip>
+        <FilterChip selected={form.currency === 'USD'} onClick={() => setVal('currency', 'USD')}>$ USD</FilterChip>
       </div>
       <div className="budget-form__cats" role="group" aria-label="Category">
         {CATEGORIES.map((c) => (
@@ -155,7 +164,7 @@ function EntryDetail({ entry, fxRate, onEdit, onDelete, onClose }) {
   const rows = [
     ['Amount', [
       entry.amountJPY != null && fmtJPY(entry.amountJPY),
-      fmtTHB(toTHB(entry, fxRate)),
+      fmtUSD(toUSD(entry, fxRate)),
     ].filter(Boolean).join(' · ')],
     ['Category', `${CAT_ICO[entry.category] || '•'} ${CAT_LABELS[entry.category] || entry.category}`],
     ['Kind', entry.kind === 'estimate' ? 'Estimate' : 'Actual'],
@@ -191,10 +200,10 @@ function Summary({ docs, fxRate }) {
     let estimateTotal = 0;
     for (const d of docs) {
       const cat = m[d.category] ? d.category : 'other';
-      const thb = toTHB(d, fxRate);
+      const usd = toUSD(d, fxRate);
       m[cat].count += 1;
-      if (d.kind === 'estimate') { m[cat].estimate += thb; estimateTotal += thb; }
-      else { m[cat].actual += thb; actualTotal += thb; }
+      if (d.kind === 'estimate') { m[cat].estimate += usd; estimateTotal += usd; }
+      else { m[cat].actual += usd; actualTotal += usd; }
     }
     return { m, actualTotal, estimateTotal };
   }, [docs, fxRate]);
@@ -205,7 +214,7 @@ function Summary({ docs, fxRate }) {
   return (
     <div className="budget__summary">
       <div className="budget__total">
-        {fmtTHB(actualTotal)} <span className="budget__total-est">/ {fmtTHB(estimateTotal)} est</span>
+        {fmtUSD(actualTotal)} <span className="budget__total-est">/ {fmtUSD(estimateTotal)} est</span>
       </div>
       {CATEGORIES.filter((c) => m[c].count > 0).map((c) => {
         const { actual, estimate } = m[c];
@@ -220,7 +229,7 @@ function Summary({ docs, fxRate }) {
                 style={{ width: `${pct}%` }}
               />
             </span>
-            <span className="budget__cat-amt">{fmtTHB(actual)}</span>
+            <span className="budget__cat-amt">{fmtUSD(actual)}</span>
           </div>
         );
       })}
@@ -247,7 +256,7 @@ function EntryRow({ entry, fxRate, onSelect }) {
       </span>
       <span className="budget__row-amt">
         <span className="budget__amt-jpy">{fmtJPY(toJPY(entry, fxRate))}</span>
-        <span className="budget__amt-thb">{fmtTHB(toTHB(entry, fxRate))}</span>
+        <span className="budget__amt-usd">{fmtUSD(toUSD(entry, fxRate))}</span>
       </span>
     </div>
   );
@@ -260,8 +269,7 @@ export default function BudgetPage() {
   // No server orderBy: estimates may lack `date` and Firestore drops docs
   // missing an orderBy field — sort client-side instead.
   const { docs, loading, error } = useCollection(['budget']);
-  const { data: config } = useDoc(['config', 'main']);
-  const fxRate = config?.fxRate || FALLBACK_FX;
+  const fxRate = useFxRate();
 
   const [view, setView] = useState('actual');
   const [selectedId, setSelectedId] = useState(null);
@@ -308,7 +316,7 @@ export default function BudgetPage() {
 
   const submitAdd = (entry) => {
     setAddOpen(false);
-    const amt = entry.amountJPY != null ? `¥${entry.amountJPY}` : entry.amountTHB != null ? `฿${entry.amountTHB}` : '';
+    const amt = entry.amountJPY != null ? `¥${entry.amountJPY}` : entry.amountUSD != null ? `$${entry.amountUSD}` : '';
     const title = entry.item || `${CAT_LABELS[entry.category] || entry.category} ${amt}`.trim();
     addItem(['budget'], entry, { activity: { verb: 'added', title, link: '/portal/budget' } }).catch(console.error);
   };
@@ -358,7 +366,7 @@ export default function BudgetPage() {
               <div className="eyebrow budget__date-head">
                 <span>{fmtDate(g.date)}</span>
                 <span className="budget__date-sub">
-                  {fmtTHB(g.entries.reduce((sum, e) => sum + toTHB(e, fxRate), 0))}
+                  {fmtUSD(g.entries.reduce((sum, e) => sum + toUSD(e, fxRate), 0))}
                 </span>
               </div>
               {g.entries.map((e) => (
@@ -372,7 +380,7 @@ export default function BudgetPage() {
               <div className="eyebrow budget__date-head">
                 <span>{CAT_ICO[g.cat]} {CAT_LABELS[g.cat]}</span>
                 <span className="budget__date-sub">
-                  {fmtTHB(g.entries.reduce((sum, e) => sum + toTHB(e, fxRate), 0))}
+                  {fmtUSD(g.entries.reduce((sum, e) => sum + toUSD(e, fxRate), 0))}
                 </span>
               </div>
               {g.entries.map((e) => (
@@ -387,7 +395,7 @@ export default function BudgetPage() {
 
       {addOpen && (
         <BottomSheet title="Add entry" onClose={() => setAddOpen(false)}>
-          <BudgetForm initial={entryToForm(null, member?.name)} onSubmit={submitAdd} submitLabel="Add entry" />
+          <BudgetForm initial={entryToForm(null, member?.name)} fxRate={fxRate} onSubmit={submitAdd} submitLabel="Add entry" />
         </BottomSheet>
       )}
 
@@ -405,6 +413,7 @@ export default function BudgetPage() {
         <BottomSheet title="Edit entry" onClose={() => setEditing(false)}>
           <BudgetForm
             initial={entryToForm(selected, member?.name)}
+            fxRate={fxRate}
             onSubmit={submitEdit}
             submitLabel="Save changes"
           />

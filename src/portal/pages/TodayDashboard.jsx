@@ -20,9 +20,9 @@ import { updateItem, setItem } from '../../data/mutate.js';
 import { Button } from '../ui/ui.jsx';
 import { SunBurst } from '../ui/primitives.jsx';
 import { ROUTE, getTodayInfo } from '../../tripData.js';
+import { useFxRate } from '../fx.js';
 import './today.css';
 
-const FALLBACK_FX = 23;        // THB per ¥100 (matches BudgetPage)
 const TOKYO_LL = [35.6762, 139.6503];
 
 /* ---- date helpers (local-safe; mirror the other pages) --------------------- */
@@ -38,7 +38,7 @@ function todayId() {
   // real (possibly-faked) calendar date, so derive from the same source.
   const info = getTodayInfo();
   if (info.phase === 'during') {
-    const dt = new Date(2026, 6, 4 + (info.dayNum - 1)); // Jul 4 2026 + (day-1)
+    const dt = new Date(2026, 6, 3 + (info.dayNum - 1)); // Jul 3 2026 + (day-1)
     return ymd(dt);
   }
   // before/after: fall back to the (faked or real) device date used by the
@@ -87,10 +87,10 @@ function sortedActivities(activities) {
   });
 }
 
-/* ---- THB conversion (mirror BudgetPage) ------------------------------------- */
-function toTHB(entry, fxRate) {
-  if (entry.amountTHB) return entry.amountTHB;
-  if (entry.amountJPY) return (entry.amountJPY * fxRate) / 100;
+/* ---- USD conversion (mirror BudgetPage) ------------------------------------- */
+function toUSD(entry, fxRate) {
+  if (entry.amountUSD != null) return entry.amountUSD;
+  if (entry.amountJPY != null) return entry.amountJPY / (entry.fxRate || fxRate);
   return 0;
 }
 
@@ -427,21 +427,20 @@ function QuickActions({ navigate }) {
 /* =========================================================================== */
 function SpendChip({ dateIso }) {
   const { docs } = useCollection(['budget']);
-  const { data: config } = useDoc(['config', 'main']);
-  const fxRate = config?.fxRate || FALLBACK_FX;
+  const fxRate = useFxRate();
 
-  const { jpy, thb, count } = useMemo(() => {
+  const { jpy, usd, count } = useMemo(() => {
     let j = 0;
-    let t = 0;
+    let u = 0;
     let c = 0;
     for (const e of docs) {
       if (e.kind === 'actual' && e.date === dateIso) {
         c += 1;
-        j += e.amountJPY != null ? e.amountJPY : (e.amountTHB ? (e.amountTHB * 100) / fxRate : 0);
-        t += toTHB(e, fxRate);
+        j += e.amountJPY != null ? e.amountJPY : (e.amountUSD != null ? e.amountUSD * (e.fxRate || fxRate) : 0);
+        u += toUSD(e, fxRate);
       }
     }
-    return { jpy: j, thb: t, count: c };
+    return { jpy: j, usd: u, count: c };
   }, [docs, dateIso, fxRate]);
 
   if (count === 0) return null;
@@ -450,7 +449,7 @@ function SpendChip({ dateIso }) {
       <span className="today-spend__label">Today&rsquo;s spend</span>
       <span className="today-spend__amt">
         ¥{Math.round(jpy).toLocaleString()}
-        <span className="today-spend__thb"> · ฿{Math.round(thb).toLocaleString()}</span>
+        <span className="today-spend__usd"> · ${usd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
       </span>
     </div>
   );

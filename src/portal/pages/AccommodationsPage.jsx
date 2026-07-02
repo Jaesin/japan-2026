@@ -14,8 +14,8 @@ import { Button, EmptyState, Field, Input, Select, Textarea } from '../ui/ui.jsx
 import { BottomSheet, ConfirmDialog } from '../ui/overlays.jsx';
 import './accommodations.css';
 
-const TRIP_START = '2026-07-04';
-const TRIP_NIGHTS_FALLBACK = 8; // nights slept: Jul 4,5,6,7,8,9,10 (check out Jul 11)
+const TRIP_START = '2026-07-03';
+const TRIP_NIGHTS_FALLBACK = 10; // nights slept: Jul 3,4,5,6,7,8,9,10,11,12 (check out Jul 13)
 
 const EMPTY_FORM = {
   name: '', city: '', nights: '', address: '',

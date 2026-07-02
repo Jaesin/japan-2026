@@ -2,17 +2,19 @@
 // No React; pure data + helpers. Swap ROUTE / TRIP_START when the itinerary
 // is finalized. All other components derive from this file.
 
-export const TRIP_START = new Date(2026, 6, 4); // Jul 4 2026 (month is 0-indexed), local time
-export const TRIP_DAYS = 10;
+export const TRIP_START = new Date(2026, 6, 3); // Jul 3 2026 (month is 0-indexed), local time
+export const TRIP_DAYS = 11;
 
-// Placeholder route — replace with the real itinerary. `day` = trip-day the
-// family arrives at that stop; `ll` = [lat, lng] for the map.
+// `day` = trip-day the family arrives at that stop; `ll` = [lat, lng] for the map.
+// Nara is a day trip out of Osaka (same `day`), not an overnight base — it's
+// listed before Osaka so day/city lookups that take the *last* match for a
+// given day (getTodayInfo, JournalPage, ItineraryPage) still resolve day 1 to
+// Osaka, while Nara still gets its own map pin and "Featuring" credit.
 export const ROUTE = [
-  { city: 'Tokyo',  jp: '東京', day: 1, ll: [35.6762, 139.6503] },
-  { city: 'Hakone', jp: '箱根', day: 3, ll: [35.2324, 139.1069] },
-  { city: 'Kyoto',  jp: '京都', day: 5, ll: [35.0116, 135.7681] },
-  { city: 'Nara',   jp: '奈良', day: 7, ll: [34.6851, 135.8048] },
-  { city: 'Osaka',  jp: '大阪', day: 9, ll: [34.6937, 135.5023] },
+  { city: 'Nara',  jp: '奈良', day: 1, ll: [34.6851, 135.8048] },
+  { city: 'Osaka', jp: '大阪', day: 1, ll: [34.6937, 135.5023] },
+  { city: 'Kyoto', jp: '京都', day: 4, ll: [35.0116, 135.7681] },
+  { city: 'Tokyo', jp: '東京', day: 5, ll: [35.6762, 139.6503] },
 ];
 
 const MS_DAY = 86400000;
@@ -86,5 +88,5 @@ export function relativeTime(at, now = Date.now()) {
 export const SAMPLE_CHECKINS = [
   { place: 'Fushimi Inari', jp: '伏見稲荷', note: 'Ten thousand vermilion gates — and not one we could walk past.', when: '2 days ago' },
   { place: 'Tsukiji Outer Market', jp: '築地', note: 'Sushi for breakfast at 7am. No regrets, only soy sauce.', when: '4 days ago' },
-  { place: 'Hakone Ropeway', jp: '箱根', note: 'Fuji showed her face for exactly four minutes. We got the shot.', when: '5 days ago' },
+  { place: 'Nara Park', jp: '奈良公園', note: 'A deer bowed for a rice cracker. We bowed back, out of pure survival instinct.', when: '5 days ago' },
 ];

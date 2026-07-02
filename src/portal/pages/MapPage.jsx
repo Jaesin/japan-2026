@@ -22,7 +22,7 @@ import TripMap from '../components/TripMap.jsx';
 import L from 'leaflet';
 import './mappage.css';
 
-const TRIP_START_FALLBACK = '2026-07-04';
+const TRIP_START_FALLBACK = '2026-07-03';
 
 /* deterministic doc id for a Date offset from the start (local, no UTC shift) */
 function dateIdFromStart(startIso, offsetDays) {

@@ -119,7 +119,7 @@ function LegDetail({ leg, onEdit, onDelete, onClose }) {
     ['Status', leg.status === 'booked' ? 'Booked' : 'Idea'],
     ['Cost', [
       leg.costJPY != null && `¥${Number(leg.costJPY).toLocaleString()}`,
-      leg.costTHB != null && `฿${Number(leg.costTHB).toLocaleString()}`,
+      leg.costUSD != null && `$${Number(leg.costUSD).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
     ].filter(Boolean).join(' · ')],
     ['Notes', leg.notes],
   ].filter(([, v]) => v);

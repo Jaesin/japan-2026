@@ -42,9 +42,9 @@ export default function PosterDark({ checkins = SAMPLE_CHECKINS, postcards = [] 
       {/* ── Itinerary overview ── */}
       <div style={{ padding: '20px 30px 6px' }}>
         <Credits font={F.body} displayFont={F.display} label={T.muted} value={T.cream} line={T.line} rows={[
-          ['Featuring', 'Tokyo · Hakone · Kyoto · Nara · Osaka', true],
-          ['Runtime', '10 days'],
-          ['Premieres', 'July 4, 2026'],
+          ['Featuring', 'Osaka · Nara · Kyoto · Tokyo', true],
+          ['Runtime', '11 days'],
+          ['Premieres', 'July 3, 2026'],
         ]} />
       </div>
 

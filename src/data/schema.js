@@ -200,7 +200,7 @@ export const COLLECTIONS = {
     costJPY: { type: 'number', required: false },
   },
 
-  // transport/{autoId} — spec 16. costJPY/costTHB are display-read by the page
+  // transport/{autoId} — spec 16. costJPY/costUSD are display-read by the page
   // and may be written by seed/import; kept here so they're not rejected.
   transport: {
     kind: { type: 'string', required: true, enum: ['flight', 'train', 'bus', 'ferry', 'transfer-note'] },
@@ -215,11 +215,14 @@ export const COLLECTIONS = {
     status: { type: 'string', required: false, enum: ['idea', 'booked'] },
     notes: { type: 'string', required: false },
     costJPY: { type: 'number', required: false },
-    costTHB: { type: 'number', required: false },
+    costUSD: { type: 'number', required: false },
+    fxRate: { type: 'number', required: false, note: 'JPY per USD at time of payment' },
   },
 
-  // budget/{autoId} — spec 14. Amounts canonical in JPY; THB optional. `item`
-  // and `date` are optional (estimates carry no date).
+  // budget/{autoId} — spec 14. Amounts canonical in JPY; USD optional, with the
+  // JPY/USD rate used stamped alongside so historical entries stay accurate
+  // even as the live rate moves. `item` and `date` are optional (estimates
+  // carry no date).
   budget: {
     item: { type: 'string', required: false },
     category: {
@@ -229,7 +232,8 @@ export const COLLECTIONS = {
     },
     kind: { type: 'string', required: true, enum: ['estimate', 'actual'] },
     amountJPY: { type: 'number', required: false },
-    amountTHB: { type: 'number', required: false },
+    amountUSD: { type: 'number', required: false },
+    fxRate: { type: 'number', required: false, note: 'JPY per USD at time of payment' },
     date: { type: 'string', required: false },         // 'YYYY-MM-DD' (actuals)
     paidBy: { type: 'string', required: false },
     notes: { type: 'string', required: false },

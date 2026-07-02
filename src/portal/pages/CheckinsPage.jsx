@@ -46,11 +46,11 @@ function resolveBaseDate() {
   return new Date();
 }
 /* The itinerary day to surface in the picker. During the trip → today; before
-   it → Day 1 (Jul 4 2026); after → the real (faked) date (likely empty). */
+   it → Day 1 (Jul 3 2026); after → the real (faked) date (likely empty). */
 function pickerDayKey() {
   const info = getTodayInfo();
-  if (info.phase === 'before') return '2026-07-04';
-  if (info.phase === 'during') return ymd(new Date(2026, 6, 4 + (info.dayNum - 1)));
+  if (info.phase === 'before') return '2026-07-03';
+  if (info.phase === 'during') return ymd(new Date(2026, 6, 3 + (info.dayNum - 1)));
   return ymd(resolveBaseDate());
 }
 

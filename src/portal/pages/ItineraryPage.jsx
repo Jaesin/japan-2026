@@ -18,7 +18,7 @@ import { ROUTE, TRIP_DAYS as TRIP_DAYS_FALLBACK } from '../../tripData.js';
 import ItineraryDayMap from './ItineraryDayMap.jsx';
 import './itinerary.css';
 
-const TRIP_START_FALLBACK = '2026-07-04';
+const TRIP_START_FALLBACK = '2026-07-03';
 
 const EMPTY_FORM = {
   time: '', title: '', locationName: '', lat: '', lng: '',

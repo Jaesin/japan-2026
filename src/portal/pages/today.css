@@ -149,7 +149,7 @@
   color: var(--text-muted);
 }
 .today-spend__amt { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
-.today-spend__thb { font-size: 14px; color: var(--text-muted); font-weight: 600; }
+.today-spend__usd { font-size: 14px; color: var(--text-muted); font-weight: 600; }
 
 /* ---- pre-trip countdown hero ----------------------------------------------- */
 .today-hero {
